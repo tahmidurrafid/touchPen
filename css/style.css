@@ -1,0 +1,452 @@
+/* FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Subrayada:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400&display=swap');
+
+html{
+    height : 100%;
+}
+
+body{
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    margin : 0;
+    padding : 0;
+    width : 100%;
+    height: 100%;
+    position: relative;    
+}
+
+.background{
+    position: fixed;
+    top : 0;
+    left : 0;
+    width : 100%;
+    height : 100%;
+    background: rgb(17,18,26);
+    background: linear-gradient(0deg, rgba(17,18,26,1) 40%, rgba(5,6,12,1) 100%);
+    z-index: 0;
+}
+
+.background canvas{
+    position: absolute;
+    top : 0;
+    left : 0;
+    width : 100%;
+    height : 100%;
+    z-index: 1;    
+}
+
+.background img{
+    width : 100%;
+    bottom : 0;
+    left : 0;
+    z-index: 2;
+    position: absolute;
+}
+
+.page{
+    width: 100%;
+    height: 100%;
+    position : relative;
+}
+
+.container{
+    width: 100%;
+    height : 100%;
+    position: relative;
+    z-index: 10;
+}
+
+#nav{
+    height: 100%;
+    width :20%;
+    display: flex;
+    align-items: center;
+    position: fixed;
+    justify-content: center;
+}
+
+#nav .menu{
+    display: block;
+    box-sizing: border-box;
+}
+
+#nav .menu a{
+    font-family: 'Montserrat Subrayada', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size : 15px;
+    text-decoration: none;
+    color: #c5c5c5;
+    display: block;
+    box-sizing: border-box;
+    line-height: 40px;
+    transition : font-size .3s, color .3s;
+}
+
+#nav .menu a:hover{
+    font-size: 17px;
+    color : #fff;
+}
+
+#nav .menu a.selected{
+    font-size: 20px;
+    color : #fff;
+}
+
+.content{
+    width : 100%;
+    height : 100%;
+}
+
+#home{
+    box-sizing: border-box;
+    color : #fff;
+    min-height: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#home .top{
+    box-sizing: border-box;
+    /* padding : 10% 0 0 100px; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -10%;
+}
+
+#home .dp img{
+    width : 180px;
+    height : 180px;
+    border-radius: 200px;
+    border : solid 10px rgba(255, 255, 255, .1);
+}
+
+#home .description{
+    padding: 0 50px ;
+}
+
+#home .description .name{
+    font-size: 25px;
+    font-family: 'oswald', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#home .description .tagline{
+    font-family: 'Montserrat Subrayada', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 15px;
+    background-color: #4396c5;
+    padding : 5px 10px;
+    letter-spacing: .5px;
+    margin-top: 15px;
+}
+
+#home .description .social{
+    margin-top: 30px;
+    display: flex;
+    text-align: center;
+}
+
+#home .description .social .icon{
+    font-size: 30px;
+    padding: 0 7px 0 0;
+    text-decoration: none;
+    color : #fff;
+}
+
+#home .description .social .icon:hover span{
+    transform: scale(1, 1);
+}
+
+#home .description .social .icon span{
+    display: block;
+    font-family: 'oswald', 'Montserrat Subrayada', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-transform: uppercase;
+    font-size: 10px;
+    background-color: #4396c5;
+    padding: 2px;
+    transform: scale(0, 0);
+    transition: transform .3s;
+}
+
+#home .bottom{
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    bottom: 0;
+    left : 0;
+    width : 100%;
+    padding-bottom: 3%;
+}
+
+a.button{
+    text-decoration: none;
+    font-family: 'Montserrat Subrayada', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    box-sizing: border-box;
+    position: relative;
+    line-height: 60px;
+    display: inline-block;
+    text-align : center;
+    cursor: pointer;    
+    letter-spacing: 1px;
+    transition: color .6s, background-color .3s;
+}
+
+a.button .caption{
+    padding : 0 35px;
+}
+
+a.button .borders{
+    position : absolute;
+    width : 100%;
+    height : 100%;
+}
+
+a.button .borders >*{
+    position: absolute;
+    transition : width .3s, height .3s;
+}
+
+a.button .borders .topB{
+    top : 0;
+    left : 0;
+    width : 20px;
+    height : 2px;
+    background-color: #fff;
+}
+
+a.button .borders .bottomB{
+    bottom : 0;
+    right : 0;
+    width : 20px;
+    height : 2px;
+    background-color: #fff;
+
+}
+
+a.button .borders .leftB{
+    top : 0;
+    left : 0;
+    width : 2px;
+    height : 20px;
+    background-color: #fff;
+}
+
+a.button .borders .rightB{
+    bottom : 0;
+    right : 0;
+    width : 2px;
+    height : 20px;
+    background-color: #fff;
+}
+
+a.button:hover{
+    color: #000;
+    background-color: #fff;
+}
+
+a.button:hover .borders .topB, a.button:hover .borders .bottomB{
+    width : 100%;
+}
+a.button:hover .borders .leftB, a.button:hover .borders .rightB{
+    height : 100%;
+}
+
+a.button.black {
+    color: #000;
+    line-height: 30px;
+}
+
+a.button.black .topB, a.button.black .bottomB, a.button.black .leftB, a.button.black .rightB{
+    background-color: #000;
+}
+
+#about{
+    display: block;
+    width : 80%;
+    margin-left: 20%;
+    background: rgb(255,255,255);
+    background: linear-gradient(90deg, rgba(255,255,255,1) 70%, rgba(233,233,233,1) 70%);
+    min-height: 100%;
+    padding: 40px 90px;
+    box-sizing: border-box;
+}
+
+#about .heading{
+    padding-bottom: 10px;
+}
+
+#about .heading .name{
+    font-family: oswald;
+    font-size : 30px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+#about .heading .tagline{
+    background-color: #00aeef;
+    font-size: 13px;
+    color: #fff;
+    font-family: 'Montserrat Subrayada', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: inline-block;
+    padding: 5px 5px;
+}
+
+#about .topic{
+    text-align: center;
+    position: relative;
+    margin : 30px 0;
+    box-sizing: border-box;
+    padding : 30px 0;
+}
+
+#about .topic .title{
+    display: inline-block;
+    font-family: 'Montserrat Subrayada', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #00aeef;
+    color: #fff;
+    font-weight: bold;
+    font-size: 18px;
+    padding : 10px 20px;
+}
+
+#about .topic .description{
+    font-family: 'poppins';
+    font-size: 18px;
+    margin : 15px 0;
+}
+
+#about .topic .text{
+    font-family: 'poppins';
+    padding: 5px 0;
+}
+
+#about .topic .bold{
+    font-weight: bold;
+    margin : 5px 0;
+}
+
+#about .topic .italic{
+    font-style: italic;
+}
+
+#about .topic .em{
+    font-family: 'Montserrat Subrayada', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#about .topic .content{
+    padding: 20px 15%;
+    text-align: left;
+    box-sizing: border-box;
+    width : auto;
+    display: inline-block;
+
+}
+
+#about .topic .center{
+    margin-bottom: 20px;
+    position : relative;
+    z-index: 10;
+}
+
+#about .topic .link{
+    font-family: 'Montserrat Subrayada', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;    
+    background-color: #000;
+    color: #fff;
+    padding: 5px 10px;
+    margin: 10px 0 0;
+    letter-spacing: 0;
+    font-weight: bold;
+    border: solid 2px #000;
+    transition : background-color .3s, color .3s ;
+    text-decoration: none;
+    margin: 10px 0 0;
+    display: inline-block;
+}
+
+#about .topic .link:hover{
+    background-color: #fff;
+    color : #000;
+}
+
+
+#about .topic .borders{
+    position : absolute;
+    width : 100%;
+    height : 100%;
+    top : 0;
+    left : 0;
+}
+
+#about .topic .borders >*{
+    position: absolute;
+    transition : width .3s, height .3s;
+}
+
+
+#about .topic .borders .topB, #about .topic .borders .bottomB, #about .topic .borders .leftB, #about .topic .borders .rightB{
+    background-color : #7f7d7d;
+}
+
+#about .topic .borders .topB{
+    top : 0;
+    left : 0;
+    width : 20px;
+    height : 2px;
+}
+
+#about .topic .borders .bottomB{
+    bottom : 0;
+    right : 0;
+    width : 20px;
+    height : 2px;
+}
+
+#about .topic .borders .leftB{
+    top : 0;
+    left : 0;
+    width : 2px;
+    height : 20px;
+}
+
+#about .topic .borders .rightB{
+    bottom : 0;
+    right : 0;
+    width : 2px;
+    height : 20px;
+
+}
+
+
+@media only screen and (max-width: 800px) {
+    #nav{
+        position: relative;
+        width: 100%;
+        height: auto;
+        padding: 20px 0;
+    }
+    #home{
+        display: block;
+    }
+    #home .bottom{
+        position: relative;
+        padding: 50px 0 ;
+    }
+    #home .top{
+        display: block;
+        text-align: center;
+        margin-top: 0;
+    }
+    #home .top .dp{
+        padding: 0 0 15px;
+    }
+
+    #home .description .tagline{
+        display: inline-block;
+    }
+    #home .description .social{
+        justify-content: center;
+    }
+}
