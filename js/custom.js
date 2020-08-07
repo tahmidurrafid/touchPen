@@ -9,7 +9,7 @@ function distance(point1, point2){
 
 $(document).ready(function(){
     $(window).load(function(){
-        var res = 1;
+        var res = 2;
         let canvas = document.getElementById("stars");
         window.addEventListener('resize', resizeCanvas, false);
         function resizeCanvas() {
@@ -19,7 +19,7 @@ $(document).ready(function(){
 
         resizeCanvas();
         var ctx = canvas.getContext("2d");
-
+        ctx.lineCap = "round";
         var pressed = false;
         var fingers = 0;
         var path = [];
@@ -32,8 +32,14 @@ $(document).ready(function(){
 
         function transform(point){
             return {
-                x : point.x*zoom - init.x*zoom,
-                y : point.y*zoom - init.y*zoom
+                x : (point.x - init.x)*zoom*res,
+                y : (point.y - init.y)*zoom*res
+            }
+        }
+        function revTransform(point){
+            return {
+                x : (point.x + init.x*(zoom) )/(zoom),
+                y : (point.y + init.y*(zoom) )/(zoom)
             }
         }
 
@@ -53,16 +59,15 @@ $(document).ready(function(){
 
         var start, end;
         $('#stars').on({ 'touchstart' : function(e){
-            var x = e.originalEvent.touches[0].pageX * res;
-            var y = e.originalEvent.touches[0].pageY * res;
+            var x = e.originalEvent.touches[0].pageX;
+            var y = e.originalEvent.touches[0].pageY;
             pressed = true;
-            points.push({x : x, y : y});
-            fingers++;
+            points.push(revTransform({x : x, y : y}));
             start = e.originalEvent.touches;
             ctx.beginPath();
-            ctx.moveTo(x, y);
+            ctx.moveTo(x*res, y*res);
             e.preventDefault();
-        } });
+        }});
         
         $('#stars').on({ 'touchend' : function(e){
             pressed = false;
@@ -71,29 +76,24 @@ $(document).ready(function(){
             points = [];
             fingers--;
             e.preventDefault();
-        } });
+        }});
         
         $('#stars').on({ 'touchmove' : function(e){
-            var x = e.originalEvent.touches[0].pageX * res;
-            var y = e.originalEvent.touches[0].pageY * res;
+            var x = e.originalEvent.touches[0].pageX;
+            var y = e.originalEvent.touches[0].pageY;
             end = e.originalEvent.touches;            
             if(e.originalEvent.touches.length == 1){
-                points.push({x : x, y : y});
-                ctx.lineTo(x, y);
-                ctx.stroke();
+                if(points.length){
+                    points.push(revTransform({x : x, y : y}));
+                    ctx.lineTo(x * res, y * res);
+                    ctx.stroke();
+                }
             }else{
                 points = [];
-                // $(".data").prepend( (end[0].pageX - start[0].pageX) + ", " + 
-                // (end[0].pageY - start[0].pageY) + " - " + 
-                // (end[1].pageX - start[1].pageX) + "," + (end[1].pageY - start[1].pageY) );
-                var point1, point2;
-                point1 = {x : (end[0].pageX - start[0].pageX),
-                          y : (end[0].pageY - start[0].pageY) }; 
-                point2 = {x : (end[1].pageX - start[1].pageX) , 
-                          y : (end[1].pageY - start[1].pageY) };
+
                 var move = {
-                    x : (end[0].pageX + end[1].pageX)/2 - (start[0].pageX + start[1].pageX)/2,
-                    y : (end[0].pageY + end[1].pageY)/2 - (start[0].pageY + start[1].pageY)/2,
+                    x : ((end[1].pageX + end[0].pageX) - (start[0].pageX + start[1].pageX) )/2,
+                    y : ((end[1].pageY + end[0].pageY) - (start[0].pageY + start[1].pageY) )/2
                 }
                 move.x = move.x/zoom;
                 move.y = move.y/zoom;
@@ -106,8 +106,6 @@ $(document).ready(function(){
             }
             e.preventDefault();            
         } });
-
-
         
         $("#stars").mousedown(function(e){
             pressed = true;
