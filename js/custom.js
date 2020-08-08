@@ -5,8 +5,6 @@ function distance(point1, point2){
                         (point2.pageY- point1.pageY)*(point2.pageY- point1.pageY) );
 }
 
-
-
 $(document).ready(function(){
     $(window).load(function(){
         var res = 2;
