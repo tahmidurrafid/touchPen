@@ -5,6 +5,12 @@ function distance(point1, point2){
                         (point2.pageY- point1.pageY)*(point2.pageY- point1.pageY) );
 }
 
+function sendData(data) {
+    if(typeof Android !== "undefined" && Android !== null) {
+        Android.storeInQueue(JSON.stringify(data));
+    }
+}
+
 $(document).ready(function(){
     $(window).load(function(){
         var res = 2;
@@ -73,6 +79,7 @@ $(document).ready(function(){
                 path.push(points);
             points = [];
             fingers--;
+            sendData({type : "path", path : path});
             e.preventDefault();
         }});
         
