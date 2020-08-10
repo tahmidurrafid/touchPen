@@ -1,10 +1,5 @@
 'use strict';
 
-function distance(point1, point2){
-    return Math.sqrt( (point2.pageX- point1.pageX)*(point2.pageX- point1.pageX) + 
-                        (point2.pageY- point1.pageY)*(point2.pageY- point1.pageY) );
-}
-
 function sendData(data) {
     if(typeof Android !== "undefined" && Android !== null) {
         Android.storeInQueue(JSON.stringify(data));
@@ -13,122 +8,89 @@ function sendData(data) {
 
 $(document).ready(function(){
     $(window).load(function(){
-        var res = 2;
         let canvas = document.getElementById("stars");
-        window.addEventListener('resize', resizeCanvas, false);
-        function resizeCanvas() {
-            canvas.width = window.innerWidth*res;
-            canvas.height = window.innerHeight*res;
-        }
-
-        resizeCanvas();
         var ctx = canvas.getContext("2d");
-        ctx.lineCap = "round";
-        var pressed = false;
-        var fingers = 0;
-        var path = [];
-        var points = [];
+        var strokeWidth = 5;
+        var strokeColor = "#000";
+        let draw = new Draw(canvas, ctx);
+        draw.res = window.devicePixelRatio;
+
         ctx.lineWidth = 3;
-        var zoom = 1;
-        var dim = {width : 1000, height : 10000}
 
-        var init = {x : 0, y : 0};
-
-        function transform(point){
-            return {
-                x : (point.x - init.x)*zoom*res,
-                y : (point.y - init.y)*zoom*res
-            }
-        }
-        function revTransform(point){
-            return {
-                x : (point.x + init.x*(zoom) )/(zoom),
-                y : (point.y + init.y*(zoom) )/(zoom)
-            }
-        }
-
-        function redraw(){
-            ctx.clearRect(0, 0 , canvas.width, canvas.height);
-            for(var i = 0; i < path.length; i++){
-                ctx.beginPath();
-                var point = transform(path[i][0]);
-                ctx.moveTo(point.x, point.y);
-                for(var j = 1; j < path[i].length; j++){
-                    var point = transform(path[i][j]);                    
-                    ctx.lineTo(point.x , point.y );
-                }
-                ctx.stroke();
-            }
-        }
 
         var start, end;
+
         $('#stars').on({ 'touchstart' : function(e){
             var x = e.originalEvent.touches[0].pageX;
             var y = e.originalEvent.touches[0].pageY;
-            pressed = true;
-            points.push(revTransform({x : x, y : y}));
+            draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));
             start = e.originalEvent.touches;
+            draw.setStrokeWidth(strokeWidth);
+            draw.setStrokeColor(strokeColor);
+            draw.datas.points.width = strokeWidth;
+            draw.datas.points.color = strokeColor;
+
             ctx.beginPath();
-            ctx.moveTo(x*res, y*res);
+            ctx.lineCap = "round";            
+            ctx.moveTo(x*draw.res, y*draw.res);
             e.preventDefault();
         }});
         
         $('#stars').on({ 'touchend' : function(e){
-            pressed = false;
-            if(points.length)
-                path.push(points);
-            points = [];
-            fingers--;
-            sendData({type : "path", path : path});
+            if(draw.datas.points.arr.length)
+                draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
+            draw.datas.points.arr = [];
+            sendData({type : "path", path : draw.datas.path});
             e.preventDefault();
         }});
         
         $('#stars').on({ 'touchmove' : function(e){
             var x = e.originalEvent.touches[0].pageX;
             var y = e.originalEvent.touches[0].pageY;
-            end = e.originalEvent.touches;            
+            end = e.originalEvent.touches;
             if(e.originalEvent.touches.length == 1){
-                if(points.length){
-                    points.push(revTransform({x : x, y : y}));
-                    ctx.lineTo(x * res, y * res);
+                if(draw.datas.points.arr.length){
+                    draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));
+                    ctx.lineTo(x * draw.res, y * draw.res);
                     ctx.stroke();
                 }
             }else{
-                points = [];
+                draw.datas.points.arr = [];
 
                 var move = {
                     x : ((end[1].pageX + end[0].pageX) - (start[0].pageX + start[1].pageX) )/2,
                     y : ((end[1].pageY + end[0].pageY) - (start[0].pageY + start[1].pageY) )/2
                 }
-                move.x = move.x/zoom;
-                move.y = move.y/zoom;
-                init.x -= move.x, init.y -= move.y;
-                var times = distance(end[0], end[1])/ distance(start[0], start[1]);
-                zoom = zoom*times;
-                //$(".data").html(zoom + " , ( " + move.x + ", " + move.y + ") s");
-                redraw();
+                var center1 = {
+                    x : ((start[1].pageX + start[0].pageX))/(2),
+                    y : ((start[1].pageY + start[0].pageY))/(2)
+                }
+                var center2 = {
+                    x : ((end[1].pageX + end[0].pageX))/(2),
+                    y : ((end[1].pageY + end[0].pageY))/(2)
+                }
+                move.x = move.x/draw.zoom;
+                move.y = move.y/draw.zoom;
+
+                var times = draw.distance(end[0], end[1])/ draw.distance(start[0], start[1]);
+                let z1 = draw.zoom;
+                draw.zoom = draw.zoom*times;
+                let z2 = draw.zoom;
+
+                draw.init.x = draw.init.x + center1.x/z1 - center2.x/z2;
+                draw.init.y = draw.init.y + center1.y/z1 - center2.y/z2;
+
+                draw.redraw(ctx, canvas);
                 start = end;
             }
-            e.preventDefault();            
-        } });
-        
-        $("#stars").mousedown(function(e){
-            pressed = true;
-            points.push({x : e.pageX, y : e.pageY});
-        })
-        
-        $("#stars").mouseup(function(){
-            pressed = false;
-            path.push(points);
-            points = [];
-        })
+            e.preventDefault();
+        }});
 
-        $("#stars").mousemove(function(e){
-            if(pressed){
-                points.push({x : e.pageX, y : e.pageY});
-                redraw();
-            }
-        })
-
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * draw.res;
+            canvas.height = window.innerHeight * draw.res;
+        }
+        window.addEventListener('resize', resizeCanvas, false);        
+        resizeCanvas();
     })
 })
