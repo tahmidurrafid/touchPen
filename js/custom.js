@@ -44,7 +44,7 @@ $(document).ready(function(){
                 draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
             }
             draw.datas.points.arr = [];
-            sendData({type : "path", path : draw.datas});
+            sendData({type : "path", data : draw.datas});
             e.preventDefault();
         }});
         
