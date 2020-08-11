@@ -36,6 +36,10 @@ body{
     justify-items: center;    
 }
 
+#nav a.selected{
+    background-color: #052399;
+}
+
 #nav a img{
     width: 50%;
     margin :auto;

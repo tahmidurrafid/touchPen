@@ -12,11 +12,12 @@ $(document).ready(function(){
         var ctx = canvas.getContext("2d");
         var strokeWidth = 2;
         var strokeColor = "#000";
+        let tool = "pencil";
         let draw = new Draw(canvas, ctx);
         draw.res = window.devicePixelRatio;
 
-
         var start, end;
+        var prevPoint = {x : 0, y : 0};
 
         $('#stars').on({ 'touchstart' : function(e){
             var x = e.originalEvent.touches[0].pageX;
@@ -28,15 +29,20 @@ $(document).ready(function(){
             draw.datas.points.width = strokeWidth;
             draw.datas.points.color = strokeColor;
 
-            ctx.beginPath();
-            ctx.lineCap = "round";            
-            ctx.moveTo(x*draw.res, y*draw.res);
+            prevPoint = {x : x, y : y};
+            if(tool == "pencil"){
+                ctx.beginPath();
+                ctx.lineCap = "round";            
+                ctx.moveTo(x*draw.res, y*draw.res);
+            }
             e.preventDefault();
         }});
         
         $('#stars').on({ 'touchend' : function(e){
-            if(draw.datas.points.arr.length)
+            if(draw.datas.points.arr.length && tool == "pencil"){
+                draw.pushUndo();
                 draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
+            }
             draw.datas.points.arr = [];
             sendData({type : "path", path : draw.datas.path});
             e.preventDefault();
@@ -47,10 +53,28 @@ $(document).ready(function(){
             var y = e.originalEvent.touches[0].pageY;
             end = e.originalEvent.touches;
             if(e.originalEvent.touches.length == 1){
-                if(draw.datas.points.arr.length){
-                    draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));
-                    ctx.lineTo(x * draw.res, y * draw.res);
-                    ctx.stroke();
+                if(tool == "pencil"){
+                    if(draw.datas.points.arr.length){
+                        draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));
+                        ctx.lineTo(x * draw.res, y * draw.res);
+                        ctx.stroke();
+                    }
+                }else if(tool = "eraser"){
+                    let curPoint = {x : x , y : y};
+                    for(let i = 0; i < draw.datas.path.length; i++){
+                        let from =  draw.transform(draw.datas.path[i].arr[0], false);
+                        for(let j = 1; j < draw.datas.path[i].arr.length; j++){
+                            let to = draw.transform(draw.datas.path[i].arr[j], false);
+                            if(draw.intersect(from, to, prevPoint, curPoint)){
+                                console.log("katse");
+                                draw.datas.path.splice(i, 1);
+                                draw.redraw();
+                                break;
+                            }
+                            from = to;
+                        }
+                    }
+                    prevPoint = curPoint;
                 }
             }else{
                 draw.datas.points.arr = [];
@@ -83,6 +107,23 @@ $(document).ready(function(){
             }
             e.preventDefault();
         }});
+
+        $("#nav .pencil").on("click", function(){
+            tool = "pencil";
+            $("#nav .selected").removeClass("selected");
+            $("#nav .pencil").addClass("selected");
+        })
+        $("#nav .eraser").on("click", function(){
+            tool = "eraser";
+            $("#nav .selected").removeClass("selected");
+            $("#nav .eraser").addClass("selected");
+        })
+        $("#nav .undo").on("click", function(){
+            draw.performUndo();            
+        })
+        $("#nav .redo").on("click", function(){
+
+        })
 
         function resizeCanvas() {
             canvas.width = window.innerWidth * draw.res;
