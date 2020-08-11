@@ -10,12 +10,10 @@ $(document).ready(function(){
     $(window).load(function(){
         let canvas = document.getElementById("stars");
         var ctx = canvas.getContext("2d");
-        var strokeWidth = 5;
+        var strokeWidth = 2;
         var strokeColor = "#000";
         let draw = new Draw(canvas, ctx);
         draw.res = window.devicePixelRatio;
-
-        ctx.lineWidth = 3;
 
 
         var start, end;
@@ -89,6 +87,9 @@ $(document).ready(function(){
         function resizeCanvas() {
             canvas.width = window.innerWidth * draw.res;
             canvas.height = window.innerHeight * draw.res;
+            draw.redraw();
+            let height = $("#nav a").height();
+            $("#nav a").width(height + "px");
         }
         window.addEventListener('resize', resizeCanvas, false);        
         resizeCanvas();

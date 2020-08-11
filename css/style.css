@@ -16,4 +16,27 @@ body{
     position : relative;
     height: 100%;
     width : 100%;    
+    z-index: 10;
+}
+
+#nav{
+    position : fixed;
+    height: 100%;   
+    left : 0;
+    top : 0;
+    z-index: 100;
+}
+
+#nav a{
+    height : 16.6666%;
+    display: flex;
+    background-color: #000;
+    color : #fff;
+    align-items: center;
+    justify-items: center;    
+}
+
+#nav a img{
+    width: 50%;
+    margin :auto;
 }
