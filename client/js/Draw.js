@@ -53,6 +53,28 @@ let Draw = function(canvas, ctx){
             }
             ctx.stroke();
         }
+        let st = (this.init.x/this.datas.dim.width);
+        let en = (this.init.x + (canvas.width/(this.zoom*this.res))) /this.datas.dim.width;
+        let steps = 5;
+        let fontSize = 10*this.res;
+        ctx.font = fontSize + "px Arial";        
+        for(let i = 0; i <= steps; i++){
+            let pos = st + i*(en - st)/steps;
+            pos = pos*100;
+            let x = i*canvas.width/steps;
+            let y = 20;
+            ctx.fillText( Math.round(pos*10)/10, x, y);            
+        }
+        if(this.init.x < 0){
+            var to = (-this.init.x)*(this.zoom*this.res);
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, to, canvas.height);
+        }
+        if(this.init.y < 0){
+            var to = (-this.init.y)*(this.zoom*this.res);
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, to);
+        }
     }
     
 }
