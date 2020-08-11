@@ -131,8 +131,7 @@ let Draw = function(canvas, ctx){
             let x = i*canvas.width/steps;
             let y = 20;
             ctx.fillText( Math.round(pos*10)/10, x, y);            
-        }
-        
+        }   
     }
     
 }

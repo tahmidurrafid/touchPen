@@ -10,7 +10,7 @@ $(document).ready(function(){
     $(window).load(function(){
         let canvas = document.getElementById("stars");
         var ctx = canvas.getContext("2d");
-        var strokeWidth = 2;
+        var strokeWidth = 1;
         var strokeColor = "#000";
         let tool = "pencil";
         let draw = new Draw(canvas, ctx);
@@ -44,7 +44,7 @@ $(document).ready(function(){
                 draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
             }
             draw.datas.points.arr = [];
-            sendData({type : "path", path : draw.datas.path});
+            sendData({type : "path", path : draw.datas});
             e.preventDefault();
         }});
         
@@ -117,6 +117,35 @@ $(document).ready(function(){
             $("#nav .selected").removeClass("selected");
             $("#nav .eraser").addClass("selected");
         })
+        $("#nav .pencil-more").on("click", function(){
+            tool = "pencil";
+            $("#nav .selected").removeClass("selected");
+            $("#nav .pencil-more").addClass("selected");
+            $("#nav .pencil-more").parent().addClass("selected");
+        })
+
+        $("#nav .pencil-sub .color").on('click' , function(e){
+            $("#nav .pencil-sub .color").removeClass("taken");
+            $(this).addClass("taken");
+            strokeColor = $(this).attr("data-color");
+        });
+
+        var sliderPrev = 0;        
+        $("#nav .pencil-sub .slider").on({ 'touchstart' : function(e){
+            sliderPrev = e.originalEvent.touches[0].pageX;
+        } });
+
+        $("#nav .pencil-sub .slider").on({ 'touchmove' : function(e){
+            var x = e.originalEvent.touches[0].pageX;
+            strokeWidth = strokeWidth + (x - sliderPrev)/50;
+            if(strokeWidth > 10) strokeWidth = 10;
+            if(strokeWidth < 1) strokeWidth = 1;
+            strokeWidth = Math.round(strokeWidth*10)/10;
+            $(".pencil-sub .slider .vert").css("left", (strokeWidth*10) + "%" );
+            $(".pencil-sub .stroke").html(strokeWidth + "");
+            sliderPrev = x;
+        }});
+
         $("#nav .undo").on("click", function(){
             draw.performUndo();            
         })
@@ -128,8 +157,8 @@ $(document).ready(function(){
             canvas.width = window.innerWidth * draw.res;
             canvas.height = window.innerHeight * draw.res;
             draw.redraw();
-            let height = $("#nav a").height();
-            $("#nav a").width(height + "px");
+            let height = $("#nav>div").height();
+            $("#nav>div").width(height + "px");
         }
         window.addEventListener('resize', resizeCanvas, false);        
         resizeCanvas();

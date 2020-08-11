@@ -2,7 +2,6 @@
 
 $(document).ready(function(){
     $(window).load(function(){
-        
         async function startToWait(){
             var url = "my.json"
             let response = await fetch(url);
@@ -13,7 +12,6 @@ $(document).ready(function(){
             }
             startToWait();
         }
-        
         async function sendJson(data){
             const rawResponse = await fetch('/', {
                 method: 'POST',
@@ -25,28 +23,31 @@ $(document).ready(function(){
             });
             const content = await rawResponse.json();
         }
-        
+
         let canvas = document.getElementById("stars");
-        window.addEventListener('resize', resizeCanvas, false);
-
         var ctx = canvas.getContext("2d");
-
+        let draw = new Draw(canvas, ctx);
+//        draw.res = window.devicePixelRatio;
+        draw.res = 1;
         ctx.lineCap = "round";
-        ctx.lineWidth = datas.lineWidth;
-
-        function resizeCanvas() {
-            canvas.width = datas.dim.width*res;
-            canvas.height = datas.dim.height*res;
-        }
-
-        resizeCanvas();
-
         startToWait();
+
         function processData(data){
             if(data.type == "path"){
-                datas.path = data.path;
+                draw.datas = data;
                 redraw();
+                if(canvas.width != draw.datas.dim.width || canvas.height != draw.datas.dim.height ){
+                    resizeCanvas();
+                }
             }
         }
+
+        window.addEventListener('resize', resizeCanvas, false);
+        function resizeCanvas() {
+            canvas.width = draw.datas.dim.width * draw.res;
+            canvas.height = draw.datas.dim.height * draw.res;
+            draw.redraw();
+        }
+        resizeCanvas();
     })
 })

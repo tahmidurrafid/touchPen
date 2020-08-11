@@ -27,8 +27,17 @@ body{
     z-index: 100;
 }
 
-#nav a{
+#nav>div{
     height : 16.6666%;
+    display: flex;
+    background-color: #000;
+    color : #fff;
+    align-items: center;
+    justify-items: center;    
+}
+#nav a{
+    height : 100%;
+    width : 100%;
     display: flex;
     background-color: #000;
     color : #fff;
@@ -43,4 +52,74 @@ body{
 #nav a img{
     width: 50%;
     margin :auto;
+}
+
+#nav .pencil-sub{
+    display : none;
+    position : absolute;
+    left : 100%;
+    background-color: #000;
+    z-index: 100;
+    padding : 20px;
+    box-sizing: border-box;
+    min-width: 400px;
+    bottom: 0;
+}
+
+#nav .pencil-sub .caption{
+    margin : 10px 0;
+}
+
+#nav .pencil-sub .slider{
+    position: relative;
+    width : 100%;
+    margin : 10px 0;
+}
+
+#nav .pencil-sub .slider .hori{
+    padding: 10px 0;
+    width : 100%;
+}
+#nav .pencil-sub .slider .hori .bar{
+    height: 5px;
+    width : 100%;
+    background-color : #fff;
+}
+
+#nav .pencil-sub .slider .vert{
+    position: absolute;
+    left: 0;
+    top : 0;
+    width: 5px;
+    height: 25px;
+    background-color: #fff;
+}
+
+#nav .pencil-sub .colors{
+    display: flex;
+}
+
+#nav .pencil-sub .colors .color{ 
+    background-color: #fff;
+    display: block;
+    width: 25%;
+    box-sizing: border-box;
+    padding: 10px;
+}
+
+#nav .pencil-sub .colors .color.taken .box{
+    box-sizing: border-box;
+    padding-top: 70%;
+    margin-top : 15%;
+}
+
+#nav .pencil-sub .colors .color .box{ 
+    position: relative;
+    width :100%;
+    padding-top : 100%;    
+    background-color: #fff;
+}
+
+#nav .selected .pencil-sub{
+    display: block;
 }
