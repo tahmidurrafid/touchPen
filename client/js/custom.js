@@ -35,7 +35,7 @@ $(document).ready(function(){
         function processData(data){
             if(data.type == "path"){
                 draw.datas = data.data;
-                redraw();
+                draw.redraw();
                 if(canvas.width != draw.datas.dim.width || canvas.height != draw.datas.dim.height ){
                     resizeCanvas();
                 }
