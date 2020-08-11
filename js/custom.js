@@ -66,7 +66,6 @@ $(document).ready(function(){
                         for(let j = 1; j < draw.datas.path[i].arr.length; j++){
                             let to = draw.transform(draw.datas.path[i].arr[j], false);
                             if(draw.intersect(from, to, prevPoint, curPoint)){
-                                console.log("katse");
                                 draw.datas.path.splice(i, 1);
                                 draw.redraw();
                                 break;
@@ -122,7 +121,7 @@ $(document).ready(function(){
             draw.performUndo();            
         })
         $("#nav .redo").on("click", function(){
-
+            draw.performRedo();
         })
 
         function resizeCanvas() {

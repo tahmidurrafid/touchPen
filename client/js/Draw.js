@@ -72,7 +72,7 @@ let Draw = function(canvas, ctx){
     }
 
     this.performRedo = function(){
-        if(this.redo.length){
+        if(this.redos.length){
             let toPush =  JSON.parse(JSON.stringify(this.datas));
             toPush.points.arr = [];
             this.undos.push(toPush);
