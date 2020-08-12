@@ -171,3 +171,31 @@ body{
     color : #fff;
     text-decoration: none;    
 }
+
+#nav .selected .sub-more{
+    display: flex;
+}
+
+#nav .sub-more{
+    position: absolute;
+    background-color: #000;
+    left: 100%;
+    top: 0;
+    width: 400%;
+    display: none;
+    height: 100%;
+}
+
+#nav .sub-more .item{
+    width : 25%;
+}
+
+#nav .sub-more .item .caption{
+    font-size: 12px;
+    width: 100%;
+    text-align: center;
+}
+
+.relative{
+    position : relative;
+}

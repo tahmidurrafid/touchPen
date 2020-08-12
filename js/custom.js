@@ -166,6 +166,16 @@ $(document).ready(function(){
             $(".connectPC").hide();
         })
 
+        $("#nav .more").on("click", function(){
+            $("#nav .selected").removeClass("selected");
+            $(this).addClass("selected");
+            $(this).parent().addClass("selected");
+        })
+
+        $("#nav .settings").on("click", function(){
+            
+        })
+
         function resizeCanvas() {
             canvas.width = window.innerWidth * draw.res;
             canvas.height = window.innerHeight * draw.res;
