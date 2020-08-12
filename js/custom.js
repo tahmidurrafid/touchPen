@@ -8,10 +8,10 @@ function sendData(data) {
 
 function getData(data){
     console.log(data + " - from javascript")
-    data = JSON.parse(data);
-    if(data.type == "ip"){
-        $(".connectPC .address").html(data.data);
-    }
+    // data = JSON.parse(data);
+    // if(data.type == "ip"){
+    //     $(".connectPC .address").html(data.data);
+    // }
 }
 
 $(document).ready(function(){
