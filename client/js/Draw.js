@@ -92,25 +92,27 @@ let Draw = function(canvas, ctx){
     
     this.redraw = function(){
         ctx.clearRect(0, 0 , canvas.width, canvas.height);
-        let gap = (this.datas.dim.width)/(this.datas.grid.row + 1);
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = "#aaa";
-        for(let i = 1; i <= this.datas.grid.row; i++){
-            ctx.beginPath();
-            let from = this.transform({x : 0, y : gap*i});            
-            let to = this.transform({x : this.datas.dim.width, y : gap*i});            
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-            ctx.stroke();
-        }
-        gap = (this.datas.dim.height)/(this.datas.grid.col + 1);
-        for(let i = 1; i <= this.datas.grid.col; i++){
-            ctx.beginPath();
-            let from = this.transform({x : gap*i, y : 0});            
-            let to = this.transform({x : gap*i , y : this.datas.dim.height});            
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-            ctx.stroke();
+        if(this.server){
+            let gap = (this.datas.dim.width)/(this.datas.grid.row + 1);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = "#aaa";
+            for(let i = 1; i <= this.datas.grid.row; i++){
+                ctx.beginPath();
+                let from = this.transform({x : 0, y : gap*i});            
+                let to = this.transform({x : this.datas.dim.width, y : gap*i});            
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.stroke();
+            }
+            gap = (this.datas.dim.height)/(this.datas.grid.col + 1);
+            for(let i = 1; i <= this.datas.grid.col; i++){
+                ctx.beginPath();
+                let from = this.transform({x : gap*i, y : 0});            
+                let to = this.transform({x : gap*i , y : this.datas.dim.height});            
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.stroke();
+            }    
         }
 
         for(var i = 0; i < this.datas.path.length; i++){

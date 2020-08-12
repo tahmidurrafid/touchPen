@@ -154,6 +154,10 @@ $(document).ready(function(){
             draw.performRedo();
         })
 
+        $(".connectPC .button").on("click", function(){
+            $(".connectPC").hide();
+        })
+
         function resizeCanvas() {
             canvas.width = window.innerWidth * draw.res;
             canvas.height = window.innerHeight * draw.res;

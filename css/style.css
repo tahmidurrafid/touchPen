@@ -123,3 +123,51 @@ body{
 #nav .selected .pencil-sub{
     display: block;
 }
+
+.connectPC{
+    position: absolute;
+    background-color: #fff;
+    z-index: 110;
+    top : 0;
+    left : 0;
+    width : 80%;
+    height : 80%;
+    left : 10%;
+    top : 10%;
+    padding : 20px;
+    box-sizing: border-box;
+    -webkit-box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    -moz-box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    overflow-y: scroll;
+}
+
+.connectPC .line{
+    font-size: 13px;
+    font-weight: 500;
+    padding : 5px 0;
+}
+
+.connectPC .box{
+    padding: 10px 20px;
+    text-align: center;
+}
+
+.connectPC .box .address{
+    display: inline-block;
+    background-color: #000;
+    color : #fff;
+    padding: 5px;
+
+}
+
+.connectPC .button{
+    text-align: center;
+}
+.connectPC .button a{
+    display: inline-block;
+    padding: 10px;
+    background-color: #000;
+    color : #fff;
+    text-decoration: none;    
+}
