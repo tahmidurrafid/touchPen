@@ -27,6 +27,7 @@ $(document).ready(function(){
         let canvas = document.getElementById("stars");
         var ctx = canvas.getContext("2d");
         let draw = new Draw(canvas, ctx);
+        draw.server = false;
 //        draw.res = window.devicePixelRatio;
         draw.res = 1;
         ctx.lineCap = "round";

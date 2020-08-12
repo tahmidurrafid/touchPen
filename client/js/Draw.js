@@ -11,7 +11,9 @@ let Draw = function(canvas, ctx){
         },
         lineWidth : 3,
         dim : {width : 1000, height : 1000},
+        grid : {row : 12, col : 1}
     };
+    this.server = true;
     
     this.undos = [];
     this.redos = [];
@@ -90,6 +92,27 @@ let Draw = function(canvas, ctx){
     
     this.redraw = function(){
         ctx.clearRect(0, 0 , canvas.width, canvas.height);
+        let gap = (this.datas.dim.width)/(this.datas.grid.row + 1);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#aaa";
+        for(let i = 1; i <= this.datas.grid.row; i++){
+            ctx.beginPath();
+            let from = this.transform({x : 0, y : gap*i});            
+            let to = this.transform({x : this.datas.dim.width, y : gap*i});            
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.stroke();
+        }
+        gap = (this.datas.dim.height)/(this.datas.grid.col + 1);
+        for(let i = 1; i <= this.datas.grid.col; i++){
+            ctx.beginPath();
+            let from = this.transform({x : gap*i, y : 0});            
+            let to = this.transform({x : gap*i , y : this.datas.dim.height});            
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.stroke();
+        }
+
         for(var i = 0; i < this.datas.path.length; i++){
             this.setStrokeWidth(this.datas.path[i].width);
             this.setStrokeColor(this.datas.path[i].color);
@@ -131,10 +154,50 @@ let Draw = function(canvas, ctx){
             let x = i*canvas.width/steps;
             let y = 20;
             ctx.fillText( Math.round(pos*10)/10, x, y);            
-        }   
+        }
     }
     
 }
 
 function max(a, b){ return a > b ? a : b;}
 function min(a, b){ return a < b ? a : b;}
+
+
+function memorySizeOf(obj) {
+    var bytes = 0;
+
+    function sizeOf(obj) {
+        if(obj !== null && obj !== undefined) {
+            switch(typeof obj) {
+            case 'number':
+                bytes += 8;
+                break;
+            case 'string':
+                bytes += obj.length * 2;
+                break;
+            case 'boolean':
+                bytes += 4;
+                break;
+            case 'object':
+                var objClass = Object.prototype.toString.call(obj).slice(8, -1);
+                if(objClass === 'Object' || objClass === 'Array') {
+                    for(var key in obj) {
+                        if(!obj.hasOwnProperty(key)) continue;
+                        sizeOf(obj[key]);
+                    }
+                } else bytes += obj.toString().length * 2;
+                break;
+            }
+        }
+        return bytes;
+    };
+
+    function formatByteSize(bytes) {
+        if(bytes < 1024) return bytes + " bytes";
+        else if(bytes < 1048576) return(bytes / 1024).toFixed(3) + " KiB";
+        else if(bytes < 1073741824) return(bytes / 1048576).toFixed(3) + " MiB";
+        else return(bytes / 1073741824).toFixed(3) + " GiB";
+    };
+
+    return formatByteSize(sizeOf(obj));
+};

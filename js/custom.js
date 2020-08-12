@@ -14,6 +14,7 @@ $(document).ready(function(){
         var strokeColor = "#000";
         let tool = "pencil";
         let draw = new Draw(canvas, ctx);
+        draw.server = true;
         draw.res = window.devicePixelRatio;
 
         var start, end;
