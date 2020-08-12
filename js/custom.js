@@ -6,6 +6,13 @@ function sendData(data) {
     }
 }
 
+function getData(data){
+    data = JSON.parse(data);
+    if(data.type == "ip"){
+        $(".connectPC .address").html(data.data);
+    }
+}
+
 $(document).ready(function(){
     $(window).load(function(){
         let canvas = document.getElementById("stars");
