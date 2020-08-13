@@ -214,7 +214,7 @@ $(document).ready(function(){
             
         })
         $("#nav .next").on("click", function(){
-            pages[pageNo] = JSON.parse(JSON.stringify(draw.datas));
+            pages[pageNo-1] = JSON.parse(JSON.stringify(draw.datas));
             pageNo++;
             if(pages.length >= pageNo){
                 draw.datas.path = [];
@@ -228,7 +228,7 @@ $(document).ready(function(){
 
         $("#nav .prev").on("click", function(){
             if(pageNo == 1) return;
-            pages[pageNo] = JSON.parse(JSON.stringify(draw.datas));
+            pages[pageNo-1] = JSON.parse(JSON.stringify(draw.datas));
             pageNo--;
             draw.datas = pages[pageNo-1];
             draw.redraw();
