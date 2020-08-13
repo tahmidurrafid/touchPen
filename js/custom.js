@@ -217,10 +217,10 @@ $(document).ready(function(){
             pages[pageNo-1] = JSON.parse(JSON.stringify(draw.datas));
             pageNo++;
             if(pages.length >= pageNo){
-                draw.datas.path = [];
-                draw.datas.points.arr = [];    
-            }else{
                 draw.datas = pages[pageNo-1];
+            }else{
+                draw.datas.path = [];
+                draw.datas.points.arr = [];                    
             }
             draw.redraw();
             sendData({type : "datas", data : draw.datas});            
