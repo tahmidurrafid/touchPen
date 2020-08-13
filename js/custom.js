@@ -69,7 +69,6 @@ $(document).ready(function(){
             }
             draw.datas.points.arr = [];
             sendData({type : "pushToPath"});
-            sendData({type : "clearPoints"});
             if(reqestPending){
                 sendData({type : "datas", data : draw.datas});
                 reqestPending = false;
