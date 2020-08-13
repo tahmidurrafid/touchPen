@@ -215,6 +215,7 @@ $(document).ready(function(){
         })
         $("#nav .next").on("click", function(){
             pages[pageNo] = JSON.parse(JSON.stringify(draw.datas));
+            pageNo++;
             if(pages.length >= pageNo){
                 draw.datas.path = [];
                 draw.datas.points.arr = [];    
@@ -224,8 +225,14 @@ $(document).ready(function(){
             draw.redraw();
             sendData({type : "datas", data : draw.datas});            
         })
-        $("#nav .prev").on("click", function(){
 
+        $("#nav .prev").on("click", function(){
+            if(pageNo == 1) return;
+            pages[pageNo] = JSON.parse(JSON.stringify(draw.datas));
+            pageNo--;
+            draw.datas = pages[pageNo-1];
+            draw.redraw();
+            sendData({type : "datas", data : draw.datas});            
         })
 
         function resizeCanvas() {
