@@ -2,6 +2,8 @@
 
 let draw;
 let reqestPending = false;
+let pageNo = 1;
+let pages = [];
 
 function sendData(data) {
     if(typeof Android !== "undefined" && Android !== null) {
@@ -202,8 +204,28 @@ $(document).ready(function(){
             $(this).parent().addClass("selected");
         })
 
+        $("#nav .clear").on("click", function(){
+            draw.datas.path = [];
+            draw.datas.points.arr = [];
+            draw.redraw();
+            sendData({type : "datas", data : draw.datas});            
+        })
         $("#nav .settings").on("click", function(){
             
+        })
+        $("#nav .next").on("click", function(){
+            pages[pageNo] = JSON.parse(JSON.stringify(draw.datas));
+            if(pages.length >= pageNo){
+                draw.datas.path = [];
+                draw.datas.points.arr = [];    
+            }else{
+                draw.datas = pages[pageNo-1];
+            }
+            draw.redraw();
+            sendData({type : "datas", data : draw.datas});            
+        })
+        $("#nav .prev").on("click", function(){
+
         })
 
         function resizeCanvas() {
