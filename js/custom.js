@@ -113,10 +113,7 @@ $(document).ready(function(){
                     prevPoint = curPoint;
                 }
             }else{
-                if(draw.datas.points.arr.length){
-                    draw.datas.points.arr = [];
-                    sendData({type : "clearPoints"});    
-                }
+                draw.datas.points.arr = [];
 
                 var move = {
                     x : ((end[1].pageX + end[0].pageX) - (start[0].pageX + start[1].pageX) )/2,
@@ -188,9 +185,11 @@ $(document).ready(function(){
 
         $("#nav .undo").on("click", function(){
             draw.performUndo();            
+            sendData({type : "datas", data : draw.datas});            
         })
         $("#nav .redo").on("click", function(){
             draw.performRedo();
+            sendData({type : "datas", data : draw.datas});            
         })
 
         $(".connectPC .button").on("click", function(){

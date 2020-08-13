@@ -70,7 +70,6 @@ let Draw = function(canvas, ctx){
             this.datas = this.undos.pop();
             this.redraw();
         }
-
     }
 
     this.performRedo = function(){
