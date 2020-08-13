@@ -34,6 +34,7 @@ $(document).ready(function(){
         startToWait();
 
         function processData(data){
+            console.log(data);
             if(data.type == "datas"){
                 draw.datas = data.data;
                 draw.redraw();
