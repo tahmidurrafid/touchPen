@@ -41,7 +41,7 @@ $(document).ready(function(){
                     resizeCanvas();
                 }
             }else if(data.type == "datas"){
-                draw.datas = data.datas;
+                draw.datas = data.data;
                 draw.redraw();
                 if(canvas.width != draw.datas.dim.width || canvas.height != draw.datas.dim.height ){
                     resizeCanvas();
