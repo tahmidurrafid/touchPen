@@ -12,7 +12,7 @@ $(document).ready(function(){
             }
             startToWait();
         }
-        async function sendJson(data){
+        async function sendData(data){
             const rawResponse = await fetch('/', {
                 method: 'POST',
                 headers: {
@@ -50,5 +50,6 @@ $(document).ready(function(){
             draw.redraw();
         }
         resizeCanvas();
+        sendData({type : "datas"});        
     })
 })

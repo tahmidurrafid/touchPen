@@ -1,5 +1,7 @@
 'use strict';
 
+let draw;
+
 function sendData(data) {
     if(typeof Android !== "undefined" && Android !== null) {
         Android.storeInQueue(JSON.stringify(data));
@@ -11,6 +13,13 @@ function getData(data){
     data = JSON.parse(data);
     if(data.type == "ip"){
         $(".connectPC .address").html(data.data);
+    }else if(data.type == "datas"){
+        sendData(
+            {
+                type : "datas",
+                data : draw.datas
+            }
+        );
     }
 }
 
@@ -21,7 +30,7 @@ $(document).ready(function(){
         var strokeWidth = 1;
         var strokeColor = "#000";
         let tool = "pencil";
-        let draw = new Draw(canvas, ctx);
+        draw = new Draw(canvas, ctx);
         draw.server = true;
         draw.res = window.devicePixelRatio;
 
