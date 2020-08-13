@@ -40,6 +40,8 @@ $(document).ready(function(){
                 if(canvas.width != draw.datas.dim.width || canvas.height != draw.datas.dim.height ){
                     resizeCanvas();
                 }
+            }else if(data.type == "datas"){
+                console.log("aia porse mama kop");
             }
         }
 
