@@ -34,18 +34,29 @@ $(document).ready(function(){
         startToWait();
 
         function processData(data){
-            if(data.type == "path"){
+            if(data.type == "datas"){
                 draw.datas = data.data;
                 draw.redraw();
                 if(canvas.width != draw.datas.dim.width || canvas.height != draw.datas.dim.height ){
                     resizeCanvas();
                 }
-            }else if(data.type == "datas"){
-                draw.datas = data.data;
-                draw.redraw();
-                if(canvas.width != draw.datas.dim.width || canvas.height != draw.datas.dim.height ){
-                    resizeCanvas();
+            }else if(data.type == "point"){
+                draw.datas.points.arr.push( data.data );
+                draw.datas.point.color = data.data.color;
+                draw.datas.point.width = data.data.width;
+                var point = draw.transform(data.data.point);
+                if(draw.datas.points.arr.length == 1){                                        
+                    ctx.beginPath();
+                    ctx.lineWidth = draw.datas.points.width;
+                    ctx.strokeStyle = draw.datas.points.color;
+                    ctx.moveTo(point.x, point.y);
                 }
+                ctx.lineTo(point.x, point.y);
+                ctx.stroke();                
+            }else if(data.type == "pushToPath"){
+                draw.datas.path.push(draw.datas.points);
+            }else if(data.type = "clearPoints"){
+                draw.datas.points.arr = [];
             }
         }
 

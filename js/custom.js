@@ -1,6 +1,7 @@
 'use strict';
 
 let draw;
+let reqestPending = false;
 
 function sendData(data) {
     if(typeof Android !== "undefined" && Android !== null) {
@@ -14,12 +15,11 @@ function getData(data){
     if(data.type == "ip"){
         $(".connectPC .address").html(data.data);
     }else if(data.type == "datas"){
-        sendData(
-            {
-                type : "datas",
-                data : draw.datas
-            }
-        );
+        if(draw.datas.points.arr.length == 0){
+            sendData({type : "datas", data : draw.datas});
+        }else{
+            reqestPending = true;
+        }
     }
 }
 
@@ -62,7 +62,12 @@ $(document).ready(function(){
                 draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
             }
             draw.datas.points.arr = [];
-            sendData({type : "path", data : draw.datas});
+            sendData({type : "pushToPath"});
+            sendData({type : "clearPoints"});
+            if(reqestPending){
+                sendData({type : "datas", data : draw.datas});
+                reqestPending = false;
+            }
             e.preventDefault();
         }});
         
@@ -86,6 +91,7 @@ $(document).ready(function(){
                             if(draw.intersect(from, to, prevPoint, curPoint)){
                                 draw.datas.path.splice(i, 1);
                                 draw.redraw();
+                                sendData({type : "datas", data : draw.datas});
                                 break;
                             }
                             from = to;
