@@ -223,6 +223,8 @@ $(document).ready(function(){
                 draw.datas.points.arr = [];                    
             }
             draw.redraw();
+            draw.undos = [];
+            draw.redos = [];
             sendData({type : "datas", data : draw.datas});            
         })
 
@@ -232,6 +234,8 @@ $(document).ready(function(){
             pageNo--;
             draw.datas = pages[pageNo-1];
             draw.redraw();
+            draw.undos = [];
+            draw.redos = [];
             sendData({type : "datas", data : draw.datas});            
         })
 
