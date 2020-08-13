@@ -54,7 +54,7 @@ $(document).ready(function(){
                 ctx.lineTo(point.x, point.y);
                 ctx.stroke();                
             }else if(data.type == "pushToPath"){
-                draw.datas.path.push(draw.datas.points);
+                draw.datas.path.push( JSON.parse(JSON.stringify(draw.datas.points)) );
                 draw.datas.points.arr = [];                
             }else if(data.type = "clearPoints"){
                 draw.datas.points.arr = [];                                
