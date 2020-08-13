@@ -55,8 +55,17 @@ $(document).ready(function(){
                 ctx.lineTo(point.x, point.y);
                 ctx.stroke();                
             }else if(data.type == "pushToPath"){
-                draw.datas.path.push( JSON.parse(JSON.stringify(draw.datas.points)) );
-                draw.datas.points.arr = [];
+                draw.datas.path.push( JSON.parse(JSON.stringify(data.data)) );
+                ctx.beginPath();
+                ctx.lineWidth = data.data.width;
+                ctx.strokeStyle = data.data.color;
+                let point = draw.transform(data.data.arr[0]);
+                ctx.moveTo(point.x, point.y);
+                for(let i = 1; i < data.data.arr.length; i++){
+                    point = draw.transform(data.data.arr[i]);
+                    ctx.lineTo(point.x, point.y);                    
+                }
+                ctx.stroke();
             }else if(data.type = "clearPoints"){
                 //draw.datas.points.arr = [];                                
                 //draw.redraw();

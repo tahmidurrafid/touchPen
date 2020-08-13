@@ -65,10 +65,11 @@ $(document).ready(function(){
         $('#stars').on({ 'touchend' : function(e){
             if(draw.datas.points.arr.length && tool == "pencil"){
                 draw.pushUndo();
+                let data = JSON.parse(JSON.stringify(draw.datas.points));
                 draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
+                sendData({type : "pushToPath", data : data});                
             }
             draw.datas.points.arr = [];
-            sendData({type : "pushToPath"});
             if(reqestPending){
                 sendData({type : "datas", data : draw.datas});
                 reqestPending = false;
