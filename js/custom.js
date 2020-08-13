@@ -113,7 +113,10 @@ $(document).ready(function(){
                     prevPoint = curPoint;
                 }
             }else{
-                draw.datas.points.arr = [];
+                if(draw.datas.points.arr.length){
+                    draw.datas.points.arr = [];
+                    sendData({type : "clearPoints"});    
+                }
 
                 var move = {
                     x : ((end[1].pageX + end[0].pageX) - (start[0].pageX + start[1].pageX) )/2,

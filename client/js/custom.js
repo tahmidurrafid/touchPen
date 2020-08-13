@@ -55,8 +55,10 @@ $(document).ready(function(){
                 ctx.stroke();                
             }else if(data.type == "pushToPath"){
                 draw.datas.path.push(draw.datas.points);
+                draw.datas.points.arr = [];                
             }else if(data.type = "clearPoints"){
-                draw.datas.points.arr = [];
+                draw.datas.points.arr = [];                                
+                draw.redraw();
             }
         }
 
