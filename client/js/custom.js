@@ -42,8 +42,8 @@ $(document).ready(function(){
                 }
             }else if(data.type == "point"){
                 draw.datas.points.arr.push( data.data );
-                draw.datas.point.color = data.data.color;
-                draw.datas.point.width = data.data.width;
+                draw.datas.points.color = data.data.color;
+                draw.datas.points.width = data.data.width;
                 var point = draw.transform(data.data.point);
                 if(draw.datas.points.arr.length == 1){                                        
                     ctx.beginPath();
