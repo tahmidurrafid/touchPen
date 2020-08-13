@@ -46,12 +46,12 @@ $(document).ready(function(){
             draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));            
             draw.datas.points.width = strokeWidth;
             draw.datas.points.color = strokeColor;
-            sendData({type : "point", 
-                data :{
-                    color : draw.datas.points.color, 
-                    width : draw.datas.points.width, 
-                    point : draw.revTransform({x : x, y : y}) }
-            });
+            // sendData({type : "point", 
+            //     data :{
+            //         color : draw.datas.points.color, 
+            //         width : draw.datas.points.width, 
+            //         point : draw.revTransform({x : x, y : y}) }
+            // });
 
             prevPoint = {x : x, y : y};
             if(tool == "pencil"){
@@ -87,12 +87,12 @@ $(document).ready(function(){
                         draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));
                         ctx.lineTo(x * draw.res, y * draw.res);
                         ctx.stroke();
-                        sendData({type : "point", 
-                        data :{
-                            color : draw.datas.points.color, 
-                            width : draw.datas.points.width, 
-                            point : draw.revTransform({x : x, y : y}) }
-                        });
+                        // sendData({type : "point", 
+                        // data :{
+                        //     color : draw.datas.points.color, 
+                        //     width : draw.datas.points.width, 
+                        //     point : draw.revTransform({x : x, y : y}) }
+                        // });
         
                     }
                 }else if(tool = "eraser"){
