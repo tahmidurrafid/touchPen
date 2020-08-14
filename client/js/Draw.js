@@ -22,6 +22,8 @@ let Draw = function(canvas, ctx){
         to : {x : -1, y:-1}
     };
     this.selected = [];
+    this.clipBoard = [];
+    this.moveFrom;
 
     this.distance = function (point1, point2){
         return Math.sqrt( (point2.pageX- point1.pageX)*(point2.pageX- point1.pageX) + 
@@ -122,11 +124,9 @@ let Draw = function(canvas, ctx){
         for(var i = 0; i < this.datas.path.length; i++){
             this.setStrokeWidth(this.datas.path[i].width);
             this.setStrokeColor(this.datas.path[i].color);
-            console.log(this.tool == "select" , this.selected.length > i , this.selected[i]);
             if(this.tool == "select" && this.selected.length > i && this.selected[i]){
                 ctx.save();
                 ctx.setLineDash([10*this.res, 10*this.res]);
-                console.log("aise re")
             }
             ctx.beginPath();
             var point = this.transform(this.datas.path[i].arr[0]);
@@ -169,11 +169,12 @@ let Draw = function(canvas, ctx){
             pos = pos*100;
             let x = i*canvas.width/steps;
             let y = 20;
-            ctx.fillText( Math.round(pos*10)/10, x, y);
+            ctx.fillText( Math.round(pos*10)/10 + "%", x, y);
         }
         if(this.select.to.x != -1 && this.tool == "select"){
             ctx.save();
             ctx.beginPath();
+            ctx.strokeStyle = "#000";
             ctx.lineWidth = 1*this.res;
             ctx.setLineDash([10*this.res, 10*this.res]);
             ctx.rect(this.select.from.x * this.res, this.select.from.y * this.res, 

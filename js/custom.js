@@ -44,7 +44,7 @@ $(document).ready(function(){
         draw = new Draw(canvas, ctx);
         draw.server = true;
         draw.res = window.devicePixelRatio;
-
+        var moving = false;
         var start, end;
         var prevPoint = {x : 0, y : 0};
 
@@ -64,8 +64,18 @@ $(document).ready(function(){
                 ctx.lineCap = "round";            
                 ctx.moveTo(x*draw.res, y*draw.res);
             }else if(draw.tool == "select"){
-                draw.select.from.x = x;
-                draw.select.from.y = y;
+                if( (draw.selected.length && 
+                insideRect(draw.select.from, draw.select.to, {x : x, y : y})) ||
+                e.originalEvent.touches.length > 1){
+                    draw.pushUndo();
+                    draw.moveFrom = {x : x, y : y};
+                    moving = true;
+                }else{
+                    draw.select.from.x = draw.select.to.x = x;
+                    draw.select.from.y = draw.select.to.y = y;
+                    moving = false;
+                    draw.selected = [];
+                }
             }
             e.preventDefault();
         }});
@@ -78,7 +88,7 @@ $(document).ready(function(){
                 sendData({type : "pushToPath", data : data});                
             }
             draw.datas.points.arr = [];
-            if(draw.tool == "select"){
+            if(draw.tool == "select" && !moving){
                 draw.selected = [];
                 let from = draw.revTransform(draw.select.from);
                 let to = draw.revTransform(draw.select.to);
@@ -94,7 +104,6 @@ $(document).ready(function(){
                     draw.selected.push(inside);
                 }
                 draw.redraw();
-                console.log(draw.selected);
             }
             if(reqestPending){
                 sendData({type : "datas", data : draw.datas});
@@ -132,8 +141,25 @@ $(document).ready(function(){
                     }
                     prevPoint = curPoint;
                 }else if(draw.tool == "select"){
-                    draw.select.to.x = x;
-                    draw.select.to.y = y;
+                    if(!moving){
+                        draw.select.to.x = x;
+                        draw.select.to.y = y;
+                    }else{
+                        let move = {x : (x - draw.moveFrom.x)/draw.zoom , y : (y - draw.moveFrom.y)/draw.zoom };
+                        for(var i = 0; i < draw.datas.path.length; i++){
+                            if(draw.selected[i]){
+                                for(var j = 0; j < draw.datas.path[i].arr.length; j++){
+                                    draw.datas.path[i].arr[j].x += move.x;
+                                    draw.datas.path[i].arr[j].y += move.y;
+                                }
+                            }
+                        }
+                        draw.moveFrom = {x : x, y : y};
+                        draw.select.from.x += move.x*draw.zoom;
+                        draw.select.to.x += move.x*draw.zoom;
+                        draw.select.from.y += move.y*draw.zoom;
+                        draw.select.to.y += move.y*draw.zoom;
+                    }
                     draw.redraw();
                 }
             }else{
@@ -170,19 +196,19 @@ $(document).ready(function(){
 
         $("#nav .pencil").on("click", function(){
             draw.tool = "pencil";
-            $("#nav .selected").removeClass("selected");
-            $("#nav .pencil").addClass("selected");
+            $(".selectOption").removeClass("show");
+            draw.redraw();
         })
+
         $("#nav .eraser").on("click", function(){
             draw.tool = "eraser";
-            $("#nav .selected").removeClass("selected");
-            $("#nav .eraser").addClass("selected");
+            $(".selectOption").removeClass("show");
+            draw.redraw();
         })
+
         $("#nav .pencil-more").on("click", function(){
-            draw.tool = "pencil";
-            $("#nav .selected").removeClass("selected");
-            $("#nav .pencil-more").addClass("selected");
-            $("#nav .pencil-more").parent().addClass("selected");
+            $("#nav .pencil-more").toggleClass("selected");
+            $("#nav .pencil-more").parent().toggleClass("selected");
         })
 
         $("#nav .pencil-sub .color").on('click' , function(e){
@@ -221,21 +247,85 @@ $(document).ready(function(){
         })
 
         $("#nav .more").on("click", function(){
-            $("#nav .selected").removeClass("selected");
-            $(this).addClass("selected");
-            $(this).parent().addClass("selected");
+            $(this).toggleClass("selected");
+            $(this).parent().toggleClass("selected");
         })
 
         $("#nav .clear").on("click", function(){
+            draw.pushUndo();
             draw.datas.path = [];
             draw.datas.points.arr = [];
             draw.redraw();
             sendData({type : "datas", data : draw.datas});            
         })
         $("#nav .select").on("click", function(){
-            draw.tool = "select";
-
+            draw.tool = "select"
+            draw.selected = [];
+            moving = false;
+            draw.select.to.x = -1;
+            $(".selectOption").addClass("show");
         })
+
+        $(".major").on("click", function(){
+            $(".major.selected").removeClass("selected");
+            $(this).addClass("selected");
+        })
+
+
+        $(".selectOption .copy").on("click", function(){
+            draw.clipBoard = [];
+            for(let i = draw.selected.length-1; i >= 0; i--){
+                if(draw.selected[i]){
+                    draw.clipBoard.push(JSON.parse(JSON.stringify(draw.datas.path[i])));
+                }
+            }
+        })
+        $(".selectOption .cut").on("click", function(){
+            draw.clipBoard = [];
+            draw.pushUndo();
+            for(let i = draw.selected.length-1; i >= 0; i--){
+                if(draw.selected[i]){
+                    draw.clipBoard.push(JSON.parse(JSON.stringify(draw.datas.path[i])));
+                    draw.datas.path.splice(i, 1);
+                }
+            }
+            draw.selected = [];
+            draw.redraw();
+            sendData({type : "datas", data : draw.datas});
+        })
+        $(".selectOption .paste").on("click", function(){
+            if(draw.clipBoard.length){
+                draw.pushUndo();
+                var mn = {x : 1000000000, y : 1000000000};
+                var mx = {x : -1000000000, y : -1000000000};
+                for(let i = 0; i < draw.clipBoard.length; i++){
+                    for(let j = 0; j < draw.clipBoard[i].arr.length; j++){
+                        let point = draw.clipBoard[i].arr[j];
+                        mn.x = min(mn.x, point.x), mn.y = min(mn.y, point.y);
+                        mx.x = max(mx.x, point.x), mx.y = max(mx.y, point.y);
+                    }
+                }
+                for(let i = 0; i < draw.clipBoard.length; i++){
+                    for(let j = 0; j < draw.clipBoard[i].arr.length; j++){
+                        let point = draw.clipBoard[i].arr[j];
+                        point.x -= mn.x - draw.init.x-200, point.y -= mn.y - draw.init.y-50;
+                    }
+                }
+                draw.selected = [];
+                for(var i = 0; i < draw.datas.path.length; i++) draw.selected.push(false);
+                for(let i = 0; i < draw.clipBoard.length; i++){
+                    draw.datas.path.push(draw.clipBoard[i]);
+                    draw.selected.push(true);
+                }
+                mx.x = (mx.x - mn.x) + draw.init.x+200, mx.y = (mx.y - mn.y) + draw.init.y+50;
+                mn.x = draw.init.x+200, mn.y = draw.init.y+50;
+                draw.select.from = draw.transform(mn, false);
+                draw.select.to = draw.transform(mx, false);
+                draw.redraw();
+                sendData({type : "datas", data : draw.datas});
+            }
+        })
+
         $("#nav .settings").on("click", function(){
             $(".settings.popup").show();
             $(".dimWidth").val(draw.datas.dim.width);
@@ -250,7 +340,6 @@ $(document).ready(function(){
             draw.datas.dim.height = checkNumber( $(".dimHeight").val(), draw.datas.dim.height);
             draw.datas.grid.row = checkNumber( $(".gridRow").val(), draw.datas.grid.row );
             draw.datas.grid.col = checkNumber( $(".gridCol").val(), draw.datas.grid.col );
-            console.log(draw.datas);
             draw.redraw();
             sendData({type : "datas", data : draw.datas});            
         })

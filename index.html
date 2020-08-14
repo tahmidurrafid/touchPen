@@ -17,7 +17,7 @@
         <div class = "data"></div>
         <div id = "nav">
             <div>
-                <a href = "#" class = "eraser">
+                <a href = "#" class = "eraser major">
                     <img src = "images/eraser.svg"/>
                 </a>    
             </div>   
@@ -32,7 +32,7 @@
                 </a>    
             </div>  
             <div>
-                <a href = "#" class = "pencil selected">
+                <a href = "#" class = "pencil selected major">
                     <img src = "images/pencil-alt.svg"/>
                 </a>    
             </div>  
@@ -70,11 +70,11 @@
                     <img src = "images/arrow-right.svg"/>
                 </a>
                 <div class = "sub-more">
-                    <div class = "item select">
-                        <a href = "#"><img src = "images/select.svg"/></a>
+                    <div class = "item">
+                        <a class = "select major" href = "#"><img src = "images/select.svg"/></a>
                     </div>
-                    <div class = "item settings">
-                        <a href = "#"><img src = "images/cog.svg"/></a>
+                    <div class = "item">
+                        <a class = "settings" href = "#"><img src = "images/cog.svg"/></a>
                     </div>
                     <div class = "item clear">
                         <a href = "#"><span class = "caption">CLEAR<br/>PAGE</span></a>
@@ -100,6 +100,7 @@
                 </div>
             </div>
         </div>
+        
         <canvas id = "stars">
         </canvas>
 
@@ -141,6 +142,11 @@
             </div>            
         </div>
 
+        <div class = "selectOption">
+            <div><a class = "cut" href = "#">Cut</a></div>
+            <div><a class = "copy" href = "#">Copy</a></div>
+            <div><a class = "paste" href = "#">Paste</a></div>
+        </div>
 
         <div class = "connectPC popup" style = "display : none">
             <div class = "line">To view the canvas on your PC/Laptop:</div>

@@ -143,10 +143,6 @@ body{
     display: none;
 }
 
-.settings.popup{
-
-}
-
 .settings.popup .option{
     padding : 10px;
 }
@@ -240,6 +236,10 @@ body{
     width : 11.111%;
 }
 
+#nav .selected.major{
+    background-color: #052399;
+}
+
 #nav .sub-more .item .caption{
     font-size: 12px;
     width: 100%;
@@ -248,4 +248,31 @@ body{
 
 .relative{
     position : relative;
+}
+
+.selectOption{
+    position: fixed;
+    top : 0;
+    right: 0;
+    width : 20%;
+    display: none;
+    z-index: 105;
+}
+
+.selectOption.show{
+    display: flex;
+}
+
+.selectOption>div{
+    width : 33.33%;
+    background-color: #000;
+    text-align: center;
+}
+
+.selectOption>div>a{
+    display: block;
+    width: 100%;
+    color : #fff;
+    text-decoration: none;
+    line-height: 50px;
 }
