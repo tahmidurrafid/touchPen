@@ -12,10 +12,9 @@ function sendData(data) {
 }
 
 function getData(data){
-    console.log(data + " - from javascript")
     data = JSON.parse(data);
     if(data.type == "ip"){
-        $(".connectPC .address").html(data.data);
+        $(".address").html(data.data);
     }else if(data.type == "datas"){
         if(draw.datas.points.arr.length == 0){
             sendData({type : "datas", data : draw.datas});
@@ -25,13 +24,23 @@ function getData(data){
     }
 }
 
+function checkNumber(a, b){
+    let val = parseInt(a);
+    if(isNaN(val) || val < 0) return b;
+    return val; 
+}
+
+function insideRect(p1, p2, p){
+    return (p.x <= max(p1.x, p2.x)) && (p.x >= min(p1.x, p2.x) ) &&
+        (p.y <= max(p1.y, p2.y)) && (p.y >= min(p1.y, p2.y) );
+}
+
 $(document).ready(function(){
     $(window).load(function(){
         let canvas = document.getElementById("stars");
         var ctx = canvas.getContext("2d");
         var strokeWidth = 1;
         var strokeColor = "#000";
-        let tool = "pencil";
         draw = new Draw(canvas, ctx);
         draw.server = true;
         draw.res = window.devicePixelRatio;
@@ -48,30 +57,45 @@ $(document).ready(function(){
             draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));            
             draw.datas.points.width = strokeWidth;
             draw.datas.points.color = strokeColor;
-            // sendData({type : "point", 
-            //     data :{
-            //         color : draw.datas.points.color, 
-            //         width : draw.datas.points.width, 
-            //         point : draw.revTransform({x : x, y : y}) }
-            // });
 
             prevPoint = {x : x, y : y};
-            if(tool == "pencil"){
+            if(draw.tool == "pencil"){
                 ctx.beginPath();
                 ctx.lineCap = "round";            
                 ctx.moveTo(x*draw.res, y*draw.res);
+            }else if(draw.tool == "select"){
+                draw.select.from.x = x;
+                draw.select.from.y = y;
             }
             e.preventDefault();
         }});
         
         $('#stars').on({ 'touchend' : function(e){
-            if(draw.datas.points.arr.length && tool == "pencil"){
+            if(draw.datas.points.arr.length && draw.tool == "pencil"){
                 draw.pushUndo();
                 let data = JSON.parse(JSON.stringify(draw.datas.points));
                 draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
                 sendData({type : "pushToPath", data : data});                
             }
             draw.datas.points.arr = [];
+            if(draw.tool == "select"){
+                draw.selected = [];
+                let from = draw.revTransform(draw.select.from);
+                let to = draw.revTransform(draw.select.to);
+                console.log(from, to, draw.datas);
+                for(let i = 0; i < draw.datas.path.length; i++){
+                    let inside = false;
+                    for(let j = 0; j < draw.datas.path[i].arr.length; j++){
+                        if(insideRect(from, to ,draw.datas.path[i].arr[j])){
+                            inside = true;                            
+                            break;
+                        }
+                    }
+                    draw.selected.push(inside);
+                }
+                draw.redraw();
+                console.log(draw.selected);
+            }
             if(reqestPending){
                 sendData({type : "datas", data : draw.datas});
                 reqestPending = false;
@@ -84,20 +108,14 @@ $(document).ready(function(){
             var y = e.originalEvent.touches[0].pageY;
             end = e.originalEvent.touches;
             if(e.originalEvent.touches.length == 1){
-                if(tool == "pencil"){
+                if(draw.tool == "pencil"){
                     if(draw.datas.points.arr.length){
                         draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));
                         ctx.lineTo(x * draw.res, y * draw.res);
                         ctx.stroke();
-                        // sendData({type : "point", 
-                        // data :{
-                        //     color : draw.datas.points.color, 
-                        //     width : draw.datas.points.width, 
-                        //     point : draw.revTransform({x : x, y : y}) }
-                        // });
-        
+
                     }
-                }else if(tool = "eraser"){
+                }else if(draw.tool == "eraser"){
                     let curPoint = {x : x , y : y};
                     for(let i = 0; i < draw.datas.path.length; i++){
                         let from =  draw.transform(draw.datas.path[i].arr[0], false);
@@ -113,6 +131,10 @@ $(document).ready(function(){
                         }
                     }
                     prevPoint = curPoint;
+                }else if(draw.tool == "select"){
+                    draw.select.to.x = x;
+                    draw.select.to.y = y;
+                    draw.redraw();
                 }
             }else{
                 draw.datas.points.arr = [];
@@ -147,17 +169,17 @@ $(document).ready(function(){
         }});
 
         $("#nav .pencil").on("click", function(){
-            tool = "pencil";
+            draw.tool = "pencil";
             $("#nav .selected").removeClass("selected");
             $("#nav .pencil").addClass("selected");
         })
         $("#nav .eraser").on("click", function(){
-            tool = "eraser";
+            draw.tool = "eraser";
             $("#nav .selected").removeClass("selected");
             $("#nav .eraser").addClass("selected");
         })
         $("#nav .pencil-more").on("click", function(){
-            tool = "pencil";
+            draw.tool = "pencil";
             $("#nav .selected").removeClass("selected");
             $("#nav .pencil-more").addClass("selected");
             $("#nav .pencil-more").parent().addClass("selected");
@@ -191,7 +213,7 @@ $(document).ready(function(){
         })
         $("#nav .redo").on("click", function(){
             draw.performRedo();
-            sendData({type : "datas", data : draw.datas});            
+            sendData({type : "datas", data : draw.datas});
         })
 
         $(".connectPC .button").on("click", function(){
@@ -210,9 +232,29 @@ $(document).ready(function(){
             draw.redraw();
             sendData({type : "datas", data : draw.datas});            
         })
-        $("#nav .settings").on("click", function(){
-            
+        $("#nav .select").on("click", function(){
+            draw.tool = "select";
+
         })
+        $("#nav .settings").on("click", function(){
+            $(".settings.popup").show();
+            $(".dimWidth").val(draw.datas.dim.width);
+            $(".dimHeight").val(draw.datas.dim.height);
+            $(".gridRow").val(draw.datas.grid.row);
+            $(".gridCol").val(draw.datas.grid.col);
+        });
+
+        $(".settings.popup .button a").on("click", function(){
+            $(".settings.popup").hide();
+            draw.datas.dim.width = checkNumber($(".dimWidth").val(), draw.datas.dim.width);
+            draw.datas.dim.height = checkNumber( $(".dimHeight").val(), draw.datas.dim.height);
+            draw.datas.grid.row = checkNumber( $(".gridRow").val(), draw.datas.grid.row );
+            draw.datas.grid.col = checkNumber( $(".gridCol").val(), draw.datas.grid.col );
+            console.log(draw.datas);
+            draw.redraw();
+            sendData({type : "datas", data : draw.datas});            
+        })
+
         $("#nav .next").on("click", function(){
             pages[pageNo-1] = JSON.parse(JSON.stringify(draw.datas));
             pageNo++;

@@ -14,9 +14,14 @@ let Draw = function(canvas, ctx){
         grid : {row : 12, col : 1}
     };
     this.server = true;
-    
+    this.tool = "pencil";
     this.undos = [];
     this.redos = [];
+    this.select = {
+        from : {x:0, y:0},
+        to : {x : -1, y:-1}
+    };
+    this.selected = [];
 
     this.distance = function (point1, point2){
         return Math.sqrt( (point2.pageX- point1.pageX)*(point2.pageX- point1.pageX) + 
@@ -27,6 +32,13 @@ let Draw = function(canvas, ctx){
         return {
             x : (point.x - this.init.x)*this.zoom* (usingRes ? this.res : 1),
             y : (point.y - this.init.y)*this.zoom* (usingRes ? this.res : 1)
+        }
+    }
+
+    this.revTransform = function(point){
+        return {
+            x : (point.x + this.init.x*(this.zoom) )/(this.zoom),
+            y : (point.y + this.init.y*(this.zoom) )/(this.zoom)
         }
     }
 
@@ -43,13 +55,6 @@ let Draw = function(canvas, ctx){
         if( (x >= min(p1.x, p2.x) && x <= max(p1.x, p2.x)) && 
         (x >= min(p3.x, p4.x) && x <= max(p3.x, p4.x)) ) return true;
         else return false;
-    }
-
-    this.revTransform = function(point){
-        return {
-            x : (point.x + this.init.x*(this.zoom) )/(this.zoom),
-            y : (point.y + this.init.y*(this.zoom) )/(this.zoom)
-        }
     }
 
     this.pushUndo = function(){
@@ -117,6 +122,12 @@ let Draw = function(canvas, ctx){
         for(var i = 0; i < this.datas.path.length; i++){
             this.setStrokeWidth(this.datas.path[i].width);
             this.setStrokeColor(this.datas.path[i].color);
+            console.log(this.tool == "select" , this.selected.length > i , this.selected[i]);
+            if(this.tool == "select" && this.selected.length > i && this.selected[i]){
+                ctx.save();
+                ctx.setLineDash([10*this.res, 10*this.res]);
+                console.log("aise re")
+            }
             ctx.beginPath();
             var point = this.transform(this.datas.path[i].arr[0]);
             ctx.moveTo(point.x, point.y);
@@ -125,6 +136,10 @@ let Draw = function(canvas, ctx){
                 ctx.lineTo(point.x , point.y );
             }
             ctx.stroke();
+            if(this.tool == "select" && this.selected.length > i && this.selected[i]){
+                ctx.restore();                
+            }
+
         }
         ctx.fillStyle = "#EEEEEE";        
         if(this.init.x < 0){
@@ -154,7 +169,18 @@ let Draw = function(canvas, ctx){
             pos = pos*100;
             let x = i*canvas.width/steps;
             let y = 20;
-            ctx.fillText( Math.round(pos*10)/10, x, y);            
+            ctx.fillText( Math.round(pos*10)/10, x, y);
+        }
+        if(this.select.to.x != -1 && this.tool == "select"){
+            ctx.save();
+            ctx.beginPath();
+            ctx.lineWidth = 1*this.res;
+            ctx.setLineDash([10*this.res, 10*this.res]);
+            ctx.rect(this.select.from.x * this.res, this.select.from.y * this.res, 
+                        (this.select.to.x - this.select.from.x) * this.res, 
+                        (this.select.to.y - this.select.from.y) * this.res);            
+            ctx.stroke();
+            ctx.restore();
         }
     }
     

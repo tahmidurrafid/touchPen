@@ -85,12 +85,64 @@
                     <div class = "item next">
                         <a href = "#"><span class = "caption">NEXT<br/>PAGE</span></a>
                     </div>
+                    <div class = "item new">
+                        <a href = "#"><span class = "caption">NEW<br/>DOC</span></a>
+                    </div>
+                    <div class = "item save">
+                        <a href = "#"><span class = "caption">SAVE<br/>DOC</span></a>
+                    </div>
+                    <div class = "item open">
+                        <a href = "#"><span class = "caption">OPEN<br/>DOC</span></a>
+                    </div>
+                    <div class = "item pdf">
+                        <a href = "#"><span class = "caption">SAVE<br/>PDF</span></a>
+                    </div>
                 </div>
             </div>
         </div>
         <canvas id = "stars">
         </canvas>
-        <div class = "connectPC">
+
+        <div class = "settings popup">
+            <div class = "option">
+                <div class = "caption">Canvas Size:</div>
+                <div class = "item">
+                    <span class = "label">Height:</span> 
+                    <input class = "dimHeight" type="text" value="1000"/> 
+                </div>
+                <div class = "item"> 
+                    <span class = "label">Width:</span> 
+                    <input class = "dimWidth" type="text" value="1000"/> 
+                </div>
+            </div>
+            <div class = "option">
+                <div class = "caption">Number of Grids</div>
+                <div class = "item"> 
+                    <span class = "label">Rows: </span> 
+                    <input class = "gridRow" type="text" value="1000"/> 
+                </div>
+                <div class = "item"> 
+                    <span class = "label">Columns: </span> 
+                    <input class = "gridCol" type="text" value="1000"/> 
+                </div>
+            </div>
+            <div class = "option">
+                <div class="item">
+                    <span class="label">Address: </span> 
+                    <span class = "ip">192.168.0.1:8080</span>
+                </div>
+                <div class = "item">
+                    <span>Always show popup on startup: </span>
+                    <input class = "startPopup" type="checkbox" />
+                </div>
+            </div>
+            <div class = "button">
+                <a href = "#">OK!</a>
+            </div>            
+        </div>
+
+
+        <div class = "connectPC popup" style = "display : none">
             <div class = "line">To view the canvas on your PC/Laptop:</div>
             <div class = "line">First connect your pc and your phone over the same wifi network ans restart this app.</div>
             <div class = "line">
