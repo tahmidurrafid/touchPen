@@ -14,7 +14,6 @@ function sendData(data, isJson = true) {
 }
 
 function getData(data){
-    console.log(data)
     data = JSON.parse(data);
 
     if(data.type == "ip"){
@@ -33,7 +32,6 @@ function getData(data){
         }
 
     }else if(data.type == "fileList"){
-        console.log("dekhtesi kahini ki")
         $(".openDialog .list").html("");        
         for(var i = 0; i < data.data.length; i++){
             var str = '<div class = "item"><div class = "name">' + data.data[i] + 
