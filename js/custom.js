@@ -396,6 +396,15 @@ $(document).ready(function(){
             draw.redos = [];
         })
 
+        $("#nav .prev").on("click", function(){
+            pageNo = 1;
+            $(".pageNo .no").html(pageNo + "");            
+            sendData({command : "new"});   
+            draw.redraw();
+            draw.undos = [];
+            draw.redos = [];            
+        })
+
         $("#nav .save").on("click", function(){
             $(".saveDialog").show();
         })
@@ -417,6 +426,7 @@ $(document).ready(function(){
             var name = $(this).closest(".item").find(".name").html();
             sendData({command : "open", name : name});
         })
+        
         $(".closeIt").on("click", function(e){
             $(this).parent().hide();            
         })
