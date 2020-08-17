@@ -396,7 +396,7 @@ $(document).ready(function(){
             draw.redos = [];
         })
 
-        $("#nav .prev").on("click", function(){
+        $("#nav .new").on("click", function(){
             pageNo = 1;
             $(".pageNo .no").html(pageNo + "");            
             sendData({command : "new"});   
