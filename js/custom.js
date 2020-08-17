@@ -21,8 +21,9 @@ function getData(data){
 
     }else if(data.type == "datas" && data.data){
         draw.datas = data.data;
+        pageNo = parseInt(data.pageNo);
+        $(".pageNo .no").html(pageNo + "");
         draw.redraw();
-
     }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
             sendData({type : "datas", data : draw.datas});
@@ -43,7 +44,7 @@ function getData(data){
 function sendAll(saveOnly = false)
 {
     var command = saveOnly? "saveOnly" : "save";
-    sendData({type : "datas", pageNo : pageNo, data : draw.datas, command : command});
+    sendData({type : "datas", pageNo : pageNo + "", data : draw.datas, command : command});
     dataChanged = false;
 }
 
@@ -108,7 +109,7 @@ $(document).ready(function(){
                 draw.pushUndo();
                 let data = JSON.parse(JSON.stringify(draw.datas.points));
                 draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
-                sendData({type : "pushToPath", data : data}); 
+                sendData({type : "pushToPath", data : data, command : "send"}); 
                 dataChanged = true;
             }
             draw.datas.points.arr = [];
@@ -377,6 +378,7 @@ $(document).ready(function(){
                 draw.datas.path = [];
                 draw.datas.points.arr = [];                    
             }
+            sendData({command : "getPage", pageNo : pageNo});
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
@@ -388,6 +390,7 @@ $(document).ready(function(){
             pages[pageNo-1] = JSON.parse(JSON.stringify(draw.datas));
             pageNo--;
             draw.datas = pages[pageNo-1];
+            sendData({command : "getPage", pageNo : pageNo});   
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
@@ -398,7 +401,7 @@ $(document).ready(function(){
             $(".saveDialog").show();
         })
         $("#nav .open").on("click", function(){
-            sendData("fileList", false);
+            sendData({command : "fileList"});
             $(".openDialog").show();
         })
 
@@ -407,13 +410,13 @@ $(document).ready(function(){
             if(name.trim() == ""){
                 $(".saveDialog .message").html("File name can not be empty!")
             }else{
-                sendData("compile " + name , false);
+                sendData( {command : "compile", name : name });
             }
         })
 
         $(".openDialog").on("click", ".open", function(){
             var name = $(this).closest(".item").find(".name").html();
-            sendData("open " + name, false);
+            sendData({command : "open", name : name});
         })
 
         $("a").on("click", function(e){

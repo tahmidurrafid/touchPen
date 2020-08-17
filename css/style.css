@@ -343,6 +343,16 @@ body{
     text-align: center;
 }
 
+.pageNo{
+    position: absolute;
+    background-color: #000;
+    color: #fff;
+    padding: 10px;
+    right: 0;
+    top : 0;
+    z-index: 105;
+}
+
 .saveDialog>div{
     padding: 10px 0;
 }
