@@ -40,7 +40,7 @@ function getData(data){
         }
     }else if(data.type = "clear"){
         draw.datas.path = [];
-        draw.points.arr = [];
+        draw.datas.points.arr = [];
         draw.redraw();
         sendAll();
     }
