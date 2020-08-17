@@ -377,7 +377,7 @@ $(document).ready(function(){
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
-            sendAll();            
+            // sendAll();            
         })
 
         $("#nav .prev").on("click", function(){
@@ -388,7 +388,7 @@ $(document).ready(function(){
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
-            sendAll();
+            // sendAll();
         })
 
         $("#nav .save").on("click", function(){
