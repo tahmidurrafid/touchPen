@@ -4,10 +4,12 @@ let draw;
 let reqestPending = false;
 let pageNo = 1;
 let pages = [];
+let dataChanged = false;
+let into;
 
-function sendData(data) {
+function sendData(data, isJson = true) {
     if(typeof Android !== "undefined" && Android !== null) {
-        Android.storeInQueue(JSON.stringify(data));
+        Android.storeInQueue(isJson? JSON.stringify(data) : data);
     }
 }
 
@@ -15,13 +17,29 @@ function getData(data){
     data = JSON.parse(data);
     if(data.type == "ip"){
         $(".address").html(data.data);
-    }else if(data.type == "datas"){
+    }else if(data.type == "datas" && data.data){
+        draw.datas = data.data;
+        draw.redraw();
+    }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
             sendData({type : "datas", data : draw.datas});
         }else{
             reqestPending = true;
         }
+    }else if(data.type == "fileList"){
+        console.log(data);
     }
+}
+
+function sendAll(saveOnly = false)
+{
+    if(saveOnly){
+        sendData("saveOnly " + pageNo, false);
+    }else{
+        sendData("save " + pageNo, false);
+    }
+    sendData({type : "datas", pageNo : pageNo, data : draw.datas});
+    dataChanged = false;
 }
 
 function checkNumber(a, b){
@@ -61,7 +79,7 @@ $(document).ready(function(){
             prevPoint = {x : x, y : y};
             if(draw.tool == "pencil"){
                 ctx.beginPath();
-                ctx.lineCap = "round";            
+                ctx.lineCap = "round";
                 ctx.moveTo(x*draw.res, y*draw.res);
             }else if(draw.tool == "select"){
                 if( (draw.selected.length && 
@@ -85,7 +103,8 @@ $(document).ready(function(){
                 draw.pushUndo();
                 let data = JSON.parse(JSON.stringify(draw.datas.points));
                 draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
-                sendData({type : "pushToPath", data : data});                
+                sendData({type : "pushToPath", data : data}); 
+                dataChanged = true;
             }
             draw.datas.points.arr = [];
             if(draw.tool == "select" && !moving){
@@ -106,7 +125,7 @@ $(document).ready(function(){
                 draw.redraw();
             }
             if(reqestPending){
-                sendData({type : "datas", data : draw.datas});
+                sendAll();
                 reqestPending = false;
             }
             e.preventDefault();
@@ -133,7 +152,7 @@ $(document).ready(function(){
                             if(draw.intersect(from, to, prevPoint, curPoint)){
                                 draw.datas.path.splice(i, 1);
                                 draw.redraw();
-                                sendData({type : "datas", data : draw.datas});
+                                sendAll();
                                 break;
                             }
                             from = to;
@@ -235,11 +254,11 @@ $(document).ready(function(){
 
         $("#nav .undo").on("click", function(){
             draw.performUndo();            
-            sendData({type : "datas", data : draw.datas});            
+            sendAll();            
         })
         $("#nav .redo").on("click", function(){
             draw.performRedo();
-            sendData({type : "datas", data : draw.datas});
+            sendAll();
         })
 
         $(".connectPC .button").on("click", function(){
@@ -256,7 +275,7 @@ $(document).ready(function(){
             draw.datas.path = [];
             draw.datas.points.arr = [];
             draw.redraw();
-            sendData({type : "datas", data : draw.datas});            
+            sendAll();            
         })
         $("#nav .select").on("click", function(){
             draw.tool = "select"
@@ -291,7 +310,7 @@ $(document).ready(function(){
             }
             draw.selected = [];
             draw.redraw();
-            sendData({type : "datas", data : draw.datas});
+            sendAll();
         })
         $(".selectOption .paste").on("click", function(){
             if(draw.clipBoard.length){
@@ -322,7 +341,7 @@ $(document).ready(function(){
                 draw.select.from = draw.transform(mn, false);
                 draw.select.to = draw.transform(mx, false);
                 draw.redraw();
-                sendData({type : "datas", data : draw.datas});
+                sendAll();
             }
         })
 
@@ -341,7 +360,7 @@ $(document).ready(function(){
             draw.datas.grid.row = checkNumber( $(".gridRow").val(), draw.datas.grid.row );
             draw.datas.grid.col = checkNumber( $(".gridCol").val(), draw.datas.grid.col );
             draw.redraw();
-            sendData({type : "datas", data : draw.datas});            
+            sendAll();            
         })
 
         $("#nav .next").on("click", function(){
@@ -356,7 +375,7 @@ $(document).ready(function(){
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
-            sendData({type : "datas", data : draw.datas});            
+            sendAll();            
         })
 
         $("#nav .prev").on("click", function(){
@@ -367,9 +386,29 @@ $(document).ready(function(){
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
-            sendData({type : "datas", data : draw.datas});            
+            sendAll();
         })
 
+        $("#nav .save").on("click", function(){
+            $(".saveDialog").show();
+        })
+        $("#nav .open").on("click", function(){
+            sendData("fileList", false);
+            $(".openDialog").show();
+        })
+
+        $(".saveDialog .button").on("click", function(){
+            let name = $(".saveDialog .name input").val().trim();
+            if(name.trim() == ""){
+                $(".saveDialog .message").html("File name can not be empty!")
+            }else{
+                sendData("compile " + name , false);
+            }
+        })
+
+        $("a").on("click", function(e){
+            e.preventDefault();
+        })
         function resizeCanvas() {
             canvas.width = window.innerWidth * draw.res;
             canvas.height = window.innerHeight * draw.res;
@@ -381,3 +420,8 @@ $(document).ready(function(){
         resizeCanvas();
     })
 })
+
+setInterval(function(){
+    if(dataChanged)
+        sendAll(true);
+}, 5000);

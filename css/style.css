@@ -276,3 +276,91 @@ body{
     text-decoration: none;
     line-height: 50px;
 }
+
+.openDialog{
+    position: absolute;
+    background-color: #fff;
+    z-index: 110;
+    top : 0;
+    left : 0;
+    width : 80%;
+    height : 80%;
+    left : 10%;
+    top : 10%;
+    padding : 20px 0;
+    box-sizing: border-box;
+    -webkit-box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    -moz-box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    overflow-y: scroll;
+}
+
+.openDialog .item{
+    display: flex;
+    padding : 15px 20px;
+    box-sizing: border-box;
+
+}
+
+.openDialog .item:nth-child(odd){
+    background-color: rgb(226, 226, 226);
+}
+
+.openDialog .item .name{
+    padding: 5px;
+}
+
+.openDialog .item .options{
+    display: flex;
+}
+
+.openDialog .item .options>a{
+    text-transform: none;
+    padding : 5px;
+    background-color : #000;
+    color : #fff;
+    margin: 0 10px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.saveDialog{
+    position: absolute;
+    background-color: #fff;
+    z-index: 110;
+    top : 0;
+    left : 0;
+    width : 80%;
+    height : 80%;
+    left : 10%;
+    top : 10%;
+    padding : 30px;
+    box-sizing: border-box;
+    -webkit-box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    -moz-box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.14);
+    overflow-y: scroll;   
+    text-align: center;
+}
+
+.saveDialog>div{
+    padding: 10px 0;
+}
+
+.saveDialog .name input{
+    line-height: 20px;
+    padding: 10px;
+    min-width: 200px;
+    display: inline-block;
+}
+
+.saveDialog .button{
+    text-align: center;
+}
+.saveDialog .button a{
+    display: inline-block;
+    padding: 10px;
+    background-color: #000;
+    color : #fff;
+    text-decoration: none;    
+}
