@@ -411,9 +411,9 @@ $(document).ready(function(){
             }
         })
 
-        $(".openDialog .open").on("click", function(){
+        $(".openDialog").on("click", function(){
             var name = $(this).closest(".item").find(".name").html();
-            console.log(name);
+            console.log("name");
         })
 
         $("a").on("click", function(e){
