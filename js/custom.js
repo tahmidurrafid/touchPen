@@ -415,7 +415,6 @@ $(document).ready(function(){
 
         $(".saveDialog .button").on("click", function(){
             let name = $(".saveDialog .name input").val().trim();
-            console.log(name);
             if(name.trim() == ""){
                 $(".saveDialog .message").html("File name can not be empty!")
             }else{
@@ -425,6 +424,7 @@ $(document).ready(function(){
 
         $(".openDialog").on("click", ".open", function(){
             var name = $(this).closest(".item").find(".name").html();
+            console.log(name);
             sendData({command : "open", name : name});
         })
         
