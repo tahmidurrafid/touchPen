@@ -14,6 +14,7 @@ function sendData(data, isJson = true) {
 }
 
 function getData(data){
+    console.log(data)
     data = JSON.parse(data);
 
     if(data.type == "ip"){
