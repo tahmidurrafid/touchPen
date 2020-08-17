@@ -27,7 +27,12 @@ function getData(data){
             reqestPending = true;
         }
     }else if(data.type == "fileList"){
-        console.log(data);
+        for(var i = 0; i < data.data.length; i++){
+            $(".openDialog .list").html();
+            var str = '<div class = "item"><div class = "name">' + data.data[i] + 
+            '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "save">DELETE</a></div></div>';
+            $(".openDialog .list").append(str);
+        }
     }
 }
 
