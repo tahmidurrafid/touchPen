@@ -24,6 +24,7 @@ function getData(data){
         pageNo = parseInt(data.pageNo);
         $(".pageNo .no").html(pageNo + "");
         draw.redraw();
+        console.log("draw hobe?");
         //sendAll();        
     }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
