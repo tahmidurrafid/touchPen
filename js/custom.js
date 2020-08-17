@@ -15,17 +15,21 @@ function sendData(data, isJson = true) {
 
 function getData(data){
     data = JSON.parse(data);
+
     if(data.type == "ip"){
         $(".address").html(data.data);
+
     }else if(data.type == "datas" && data.data){
         draw.datas = data.data;
         draw.redraw();
+
     }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
             sendData({type : "datas", data : draw.datas});
         }else{
             reqestPending = true;
         }
+
     }else if(data.type == "fileList"){
         for(var i = 0; i < data.data.length; i++){
             $(".openDialog .list").html("");
@@ -38,12 +42,8 @@ function getData(data){
 
 function sendAll(saveOnly = false)
 {
-    if(saveOnly){
-        sendData("saveOnly " + pageNo, false);
-    }else{
-        sendData("save " + pageNo, false);
-    }
-    sendData({type : "datas", pageNo : pageNo, data : draw.datas});
+    var command = saveOnly? "saveOnly" : "save";
+    sendData({type : "datas", pageNo : pageNo, data : draw.datas, command : command});
     dataChanged = false;
 }
 
@@ -413,7 +413,7 @@ $(document).ready(function(){
 
         $(".openDialog").on("click", ".open", function(){
             var name = $(this).closest(".item").find(".name").html();
-            console.log(name);
+            sendData("open " + name, false);
         })
 
         $("a").on("click", function(e){
