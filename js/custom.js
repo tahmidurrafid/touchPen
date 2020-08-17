@@ -378,6 +378,7 @@ $(document).ready(function(){
                 draw.datas.path = [];
                 draw.datas.points.arr = [];                    
             }
+            $(".pageNo .no").html(pageNo + "");            
             sendData({command : "getPage", pageNo : pageNo});
             draw.redraw();
             draw.undos = [];
@@ -390,6 +391,7 @@ $(document).ready(function(){
             pages[pageNo-1] = JSON.parse(JSON.stringify(draw.datas));
             pageNo--;
             draw.datas = pages[pageNo-1];
+            $(".pageNo .no").html(pageNo + "");            
             sendData({command : "getPage", pageNo : pageNo});   
             draw.redraw();
             draw.undos = [];
