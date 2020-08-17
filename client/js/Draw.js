@@ -97,6 +97,7 @@ let Draw = function(canvas, ctx){
     }
     
     this.redraw = function(){
+        console.log("drawn");
         ctx.clearRect(0, 0 , canvas.width, canvas.height);
         if(this.server){
             let gap = (this.datas.dim.width)/(this.datas.grid.row + 1);
