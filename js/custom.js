@@ -10,6 +10,7 @@ function sendData(data, isJson = true) {
     if(typeof Android !== "undefined" && Android !== null) {
         Android.storeInQueue(isJson? JSON.stringify(data) : data);
     }
+    console.log(JSON.stringify(data));
 }
 
 function getData(data){
