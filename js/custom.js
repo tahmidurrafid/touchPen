@@ -23,7 +23,7 @@ function getData(data){
         pageNo = parseInt(data.pageNo);
         $(".pageNo .no").html(pageNo + "");
         draw.redraw();
-        sendAll();        
+        //sendAll();        
     }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
             sendData({type : "datas", data : draw.datas});
@@ -42,7 +42,7 @@ function getData(data){
         draw.datas.path = [];
         draw.datas.points.arr = [];
         draw.redraw();
-        sendAll();
+        //sendAll();
     }
 }
 
