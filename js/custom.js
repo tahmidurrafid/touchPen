@@ -40,6 +40,7 @@ function getData(data){
             '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "save">DELETE</a></div></div>';
             $(".openDialog .list").append(str);
         }
+        console.log("FILE LIST PAILAM +++++ OKAY ? ")
     }else if(data.type = "clear"){
         draw.datas.path = [];
         draw.datas.points.arr = [];
