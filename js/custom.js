@@ -28,7 +28,7 @@ function getData(data){
         }
     }else if(data.type == "fileList"){
         for(var i = 0; i < data.data.length; i++){
-            $(".openDialog .list").html();
+            $(".openDialog .list").html("");
             var str = '<div class = "item"><div class = "name">' + data.data[i] + 
             '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "save">DELETE</a></div></div>';
             $(".openDialog .list").append(str);
@@ -409,6 +409,11 @@ $(document).ready(function(){
             }else{
                 sendData("compile " + name , false);
             }
+        })
+
+        $(".openDialog .open").on("click", function(){
+            var name = $(this).closest(".item").find(".name").html();
+            console.log(name);
         })
 
         $("a").on("click", function(e){
