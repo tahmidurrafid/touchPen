@@ -417,6 +417,9 @@ $(document).ready(function(){
             var name = $(this).closest(".item").find(".name").html();
             sendData({command : "open", name : name});
         })
+        $(".closeIt").on("click", function(e){
+            $(this).parent().hide();            
+        })
 
         $("a").on("click", function(e){
             e.preventDefault();

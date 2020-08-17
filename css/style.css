@@ -374,3 +374,16 @@ body{
     color : #fff;
     text-decoration: none;    
 }
+
+.closeIt{
+    background-color: #000;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top : 0;
+    right: 0;
+    padding: 10px;
+}
+.closeIt img{
+    width: 100%;
+}
