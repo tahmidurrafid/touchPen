@@ -15,7 +15,7 @@ function sendData(data, isJson = true) {
 
 function getData(data){
     data = JSON.parse(data);
-
+    console.log("DATA PAISE")
     if(data.type == "ip"){
         $(".address").html(data.data);
 
