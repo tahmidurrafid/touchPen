@@ -23,6 +23,7 @@ function getData(data){
         pageNo = parseInt(data.pageNo);
         $(".pageNo .no").html(pageNo + "");
         draw.redraw();
+        sendAll();        
     }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
             sendData({type : "datas", data : draw.datas});
@@ -37,6 +38,11 @@ function getData(data){
             '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "save">DELETE</a></div></div>';
             $(".openDialog .list").append(str);
         }
+    }else if(data.type = "clear"){
+        draw.datas.path = [];
+        draw.points.arr = [];
+        draw.redraw();
+        sendAll();
     }
 }
 
@@ -133,6 +139,7 @@ $(document).ready(function(){
                 sendAll();
                 reqestPending = false;
             }
+            sendAll(true);
             e.preventDefault();
         }});
         
@@ -377,7 +384,6 @@ $(document).ready(function(){
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
-            // sendAll();            
         })
 
         $("#nav .prev").on("click", function(){
@@ -388,7 +394,6 @@ $(document).ready(function(){
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
-            // sendAll();
         })
 
         $("#nav .save").on("click", function(){
@@ -427,8 +432,3 @@ $(document).ready(function(){
         resizeCanvas();
     })
 })
-
-setInterval(function(){
-    if(dataChanged)
-        sendAll(true);
-}, 5000);
