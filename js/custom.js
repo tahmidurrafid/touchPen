@@ -3,7 +3,6 @@
 let draw;
 let reqestPending = false;
 let pageNo = 1;
-let pages = [];
 let dataChanged = false;
 let into;
 
@@ -370,14 +369,9 @@ $(document).ready(function(){
         })
 
         $("#nav .next").on("click", function(){
-            pages[pageNo-1] = JSON.parse(JSON.stringify(draw.datas));
             pageNo++;
-            if(pages.length >= pageNo){
-                draw.datas = pages[pageNo-1];
-            }else{
-                draw.datas.path = [];
-                draw.datas.points.arr = [];                    
-            }
+            draw.datas.path = [];
+            draw.datas.points.arr = [];                    
             $(".pageNo .no").html(pageNo + "");            
             sendData({command : "getPage", pageNo : pageNo});
             draw.redraw();
@@ -388,9 +382,7 @@ $(document).ready(function(){
 
         $("#nav .prev").on("click", function(){
             if(pageNo == 1) return;
-            pages[pageNo-1] = JSON.parse(JSON.stringify(draw.datas));
             pageNo--;
-            draw.datas = pages[pageNo-1];
             $(".pageNo .no").html(pageNo + "");            
             sendData({command : "getPage", pageNo : pageNo});   
             draw.redraw();
