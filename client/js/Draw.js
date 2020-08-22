@@ -89,6 +89,19 @@ let Draw = function(canvas, ctx){
         }
     }
 
+    this.pushPath = function(path = null){
+        if(!path){
+            path = JSON.parse(JSON.stringify(this.datas.points) );
+        }
+        this.datas.path.push( path );
+        runDDL(queries.pushPath(path));
+    }
+
+    this.splicePath = function(i){
+        draw.datas.path.splice(i, 1);
+        runDDL(queries.deletePath(i+1));
+        runDDL(queries.shiftPath(i+1, 1));    }
+
     this.setStrokeWidth = function(width){
         ctx.lineWidth = width* this.zoom * this.res;
     }
@@ -97,6 +110,7 @@ let Draw = function(canvas, ctx){
     }
     
     this.redraw = function(){
+        $("canvas").css("transform", "matrix(1, 0, 0, 1, 0, 0)");
         ctx.clearRect(0, 0 , canvas.width, canvas.height);
         if(this.server){
             let gap = (this.datas.dim.width)/(this.datas.grid.row + 1);

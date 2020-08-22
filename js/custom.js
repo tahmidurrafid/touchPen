@@ -3,19 +3,31 @@
 let draw;
 let reqestPending = false;
 let pageNo = 1;
-let dataChanged = false;
 let into;
 
 function sendData(data, isJson = true) {
     if(typeof Android !== "undefined" && Android !== null) {
         Android.storeInQueue(isJson? JSON.stringify(data) : data);
     }
-    console.log(JSON.stringify(data));
 }
+
+function runSQL(query){
+    if(typeof Android !== "undefined" && Android !== null) {
+        return Android.runSQL(query);
+    }
+    return "";
+}
+
+function runDDL(query){
+    if(typeof Android !== "undefined" && Android !== null) {
+        Android.runDDL(query);
+    }
+}
+
+
 
 function getData(data){
     data = JSON.parse(data);
-    console.log("DATA PAISE")
     if(data.type == "ip"){
         $(".address").html(data.data);
 
@@ -24,8 +36,7 @@ function getData(data){
         pageNo = parseInt(data.pageNo);
         $(".pageNo .no").html(pageNo + "");
         draw.redraw();
-        console.log("draw hobe?");
-        //sendAll();        
+        sendAll();
     }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
             sendData({type : "datas", data : draw.datas});
@@ -40,12 +51,11 @@ function getData(data){
             '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "save">DELETE</a></div></div>';
             $(".openDialog .list").append(str);
         }
-        console.log("FILE LIST PAILAM +++++ OKAY ? ")
     }else if(data.type = "clear"){
         draw.datas.path = [];
         draw.datas.points.arr = [];
         draw.redraw();
-        //sendAll();
+        sendAll();
     }
 }
 
@@ -53,7 +63,6 @@ function sendAll(saveOnly = false)
 {
     var command = saveOnly? "saveOnly" : "save";
     sendData({type : "datas", pageNo : pageNo + "", data : draw.datas, command : command});
-    dataChanged = false;
 }
 
 function checkNumber(a, b){
@@ -67,8 +76,63 @@ function insideRect(p1, p2, p){
         (p.y <= max(p1.y, p2.y)) && (p.y >= min(p1.y, p2.y) );
 }
 
+var queries = {
+    workingTable : function(name){
+        return "CREATE TABLE IF NOT EXISTS " + name + " ( " +
+        "PAGE_NO INTEGER PRIMARY KEY, " +
+        "WIDTH INTEGER, " +
+        "HEIGHT INTEGER );";
+    },
+    pathTable : function(name){
+        return "CREATE TABLE IF NOT EXISTS " + name + " ( " +
+        "PAGE_NO INTEGER, " +
+        "PATH_NO INTEGER, " +
+        "WIDTH REAL, " +
+        "COLOR TEXT, " +
+        "PATH TEXT, " +
+        "PRIMARY KEY ( PAGE_NO, PATH_NO) );";
+    },
+    blankPage : function(name){
+        return "INSERT INTO " + name + " VALUES( " + pageNo + ", " + draw.datas.dim.width + 
+                ", " + draw.datas.dim.height + "); ";
+    },
+    pushPath : function(path){
+        return "INSERT INTO WORKINGPATH VALUES( " + 
+            pageNo + ", " + draw.datas.path.length + ", " + 
+            path.width + ", '" + path.color + "', '" + JSON.stringify(path.arr) + "'); "
+    },
+    deletePath : function(pathNo){
+        return "DELETE FROM WORKINGPATH WHERE PATH_NO = " + pathNo + " AND PAGE_NO = " + pageNo;
+    },
+    shiftPath : function(from , by){
+        return "UPDATE WORKINGPATH " +
+            "SET PATH_NO = " + "PATH_NO - " 
+            + by + " WHERE PAGE_NO = " + pageNo + " AND PATH_NO > " + from; 
+    }
+}
+
+function loadPage(no){
+    let datas = JSON.parse(runSQL("SELECT * FROM WORKINGPATH WHERE PAGE_NO = " + no + " ORDER BY PATH_NO") );
+    for(let i = 0; i < datas.length; i++){
+        draw.datas.path.push({
+            width : parseFloat(datas[i].WIDTH),
+            color : datas[i].COLOR,
+            arr : JSON.parse(datas[i].PATH)
+        });
+        draw.redraw();
+    }
+}
+
 $(document).ready(function(){
     $(window).load(function(){
+
+        // runDDL("CREATE TABLE IF NOT EXISTS RHYTHM ( NAME TEXT, ROLL INTEGER);");
+        // runDDL("INSERT INTO RHYTHM VALUES('Toky', 21);");
+
+        runDDL(queries.workingTable("WORKING"));
+        runDDL(queries.pathTable("WORKINGPATH"));
+        console.log( runSQL("SELECT name FROM sqlite_master WHERE type='table' ") );
+
         let canvas = document.getElementById("stars");
         var ctx = canvas.getContext("2d");
         var strokeWidth = 1;
@@ -79,8 +143,19 @@ $(document).ready(function(){
         var moving = false;
         var start, end;
         var prevPoint = {x : 0, y : 0};
+        var tZoom = 1;
+        var tPos = {x : 0, y : 0};
+
+        runDDL(queries.blankPage("WORKING"));
+
+        console.log( JSON.parse(runSQL("SELECT * FROM WORKINGPATH")) );
+
+        loadPage(pageNo);
 
         $('#stars').on({ 'touchstart' : function(e){
+            if(e.cancelable)
+                e.preventDefault();
+            console.log("started")
             var x = e.originalEvent.touches[0].pageX;
             var y = e.originalEvent.touches[0].pageY;
             start = e.originalEvent.touches;
@@ -109,23 +184,20 @@ $(document).ready(function(){
                     draw.selected = [];
                 }
             }
-            e.preventDefault();
         }});
         
         $('#stars').on({ 'touchend' : function(e){
             if(draw.datas.points.arr.length && draw.tool == "pencil"){
                 draw.pushUndo();
-                let data = JSON.parse(JSON.stringify(draw.datas.points));
-                draw.datas.path.push(JSON.parse(JSON.stringify(draw.datas.points)));
-                sendData({type : "pushToPath", data : data, command : "send"}); 
-                dataChanged = true;
+                draw.pushPath();
             }
+
             draw.datas.points.arr = [];
             if(draw.tool == "select" && !moving){
                 draw.selected = [];
                 let from = draw.revTransform(draw.select.from);
                 let to = draw.revTransform(draw.select.to);
-                console.log(from, to, draw.datas);
+
                 for(let i = 0; i < draw.datas.path.length; i++){
                     let inside = false;
                     for(let j = 0; j < draw.datas.path[i].arr.length; j++){
@@ -136,27 +208,39 @@ $(document).ready(function(){
                     }
                     draw.selected.push(inside);
                 }
-                draw.redraw();
             }
+            draw.redraw();
+            tZoom = 1;
+            tPos.x = tPos.y = 0;
             if(reqestPending){
                 sendAll();
                 reqestPending = false;
             }
             sendAll(true);
-            e.preventDefault();
+            return true;
+        }});
+
+        $("body").on({ 'touchmove' : function(e){
+            if(e.cancelable)
+                e.preventDefault();
+        }});
+        $("body").on({ 'touchstart' : function(e){
+            if(e.cancelable)
+                e.preventDefault();
         }});
         
         $('#stars').on({ 'touchmove' : function(e){
+
             var x = e.originalEvent.touches[0].pageX;
             var y = e.originalEvent.touches[0].pageY;
             end = e.originalEvent.touches;
+            console.log("moving");
             if(e.originalEvent.touches.length == 1){
                 if(draw.tool == "pencil"){
                     if(draw.datas.points.arr.length){
                         draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));
                         ctx.lineTo(x * draw.res, y * draw.res);
                         ctx.stroke();
-
                     }
                 }else if(draw.tool == "eraser"){
                     let curPoint = {x : x , y : y};
@@ -165,7 +249,7 @@ $(document).ready(function(){
                         for(let j = 1; j < draw.datas.path[i].arr.length; j++){
                             let to = draw.transform(draw.datas.path[i].arr[j], false);
                             if(draw.intersect(from, to, prevPoint, curPoint)){
-                                draw.datas.path.splice(i, 1);
+                                draw.splicePath(i);
                                 draw.redraw();
                                 sendAll();
                                 break;
@@ -219,13 +303,24 @@ $(document).ready(function(){
                 draw.zoom = draw.zoom*times;
                 let z2 = draw.zoom;
 
+                let init1 = JSON.parse(JSON.stringify(draw.init));
+
                 draw.init.x = draw.init.x + center1.x/z1 - center2.x/z2;
                 draw.init.y = draw.init.y + center1.y/z1 - center2.y/z2;
 
-                draw.redraw(ctx, canvas);
+                tPos = { x: center2.x - times*(center1.x - tPos.x) , 
+                         y: center2.y - times*(center1.y - tPos.y) }
+                tZoom = tZoom*times;
+
+                if(draw.tool == "select" && draw.select.to.x != -1){
+                    changeDim(draw.select.from, z1, z2, init1, draw.init );
+                    changeDim(draw.select.to, z1, z2, init1, draw.init );
+                }
+
+                $("canvas").css("transform", "matrix(" + tZoom + ", 0, 0, " + tZoom + ", " + tPos.x + ", " + tPos.y + ")");
                 start = end;
             }
-            e.preventDefault();
+            return true;
         }});
 
         $("#nav .pencil").on("click", function(){
@@ -271,6 +366,7 @@ $(document).ready(function(){
             draw.performUndo();            
             sendAll();            
         })
+
         $("#nav .redo").on("click", function(){
             draw.performRedo();
             sendAll();
@@ -292,6 +388,7 @@ $(document).ready(function(){
             draw.redraw();
             sendAll();            
         })
+
         $("#nav .select").on("click", function(){
             draw.tool = "select"
             draw.selected = [];
@@ -314,13 +411,14 @@ $(document).ready(function(){
                 }
             }
         })
+
         $(".selectOption .cut").on("click", function(){
             draw.clipBoard = [];
             draw.pushUndo();
             for(let i = draw.selected.length-1; i >= 0; i--){
                 if(draw.selected[i]){
                     draw.clipBoard.push(JSON.parse(JSON.stringify(draw.datas.path[i])));
-                    draw.datas.path.splice(i, 1);
+                    draw.splicePath(i);
                 }
             }
             draw.selected = [];
@@ -348,7 +446,7 @@ $(document).ready(function(){
                 draw.selected = [];
                 for(var i = 0; i < draw.datas.path.length; i++) draw.selected.push(false);
                 for(let i = 0; i < draw.clipBoard.length; i++){
-                    draw.datas.path.push(draw.clipBoard[i]);
+                    draw.pushPath( draw.clipBoard[i] );
                     draw.selected.push(true);
                 }
                 mx.x = (mx.x - mn.x) + draw.init.x+200, mx.y = (mx.y - mn.y) + draw.init.y+50;
@@ -356,7 +454,6 @@ $(document).ready(function(){
                 draw.select.from = draw.transform(mn, false);
                 draw.select.to = draw.transform(mx, false);
                 draw.redraw();
-                sendAll();
             }
         })
 
@@ -415,6 +512,9 @@ $(document).ready(function(){
             sendData({command : "fileList"});
             $(".openDialog").show();
         })
+        $("#nav .pdf").on("click", function(){
+            sendData({command : "pdf"});
+        })
 
         $(".saveDialog .button").on("click", function(){
             let name = $(".saveDialog .name input").val().trim();
@@ -427,7 +527,6 @@ $(document).ready(function(){
 
         $(".openDialog").on("click", ".open", function(){
             var name = $(this).closest(".item").find(".name").html();
-            console.log(name);
             sendData({command : "open", name : name});
         })
         
@@ -449,3 +548,18 @@ $(document).ready(function(){
         resizeCanvas();
     })
 })
+
+function changeDim(point, z1, z2, init1, init2){
+    let actual = { x : (point.x + init1.x*(z1) )/(z1),
+                    y : (point.y + init1.y*(z1) )/(z1) } ;
+    let changed = { x : (actual.x - init2.x)*z2 ,
+                    y : (actual.y - init2.y)*z2 };
+    point.x = changed.x;
+    point.y = changed.y;
+}
+
+// function func(e){
+//     e.preventDefault();
+// }
+
+// window.addEventListener("touchstart", func, {passive: false} );
