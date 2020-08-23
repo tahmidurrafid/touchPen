@@ -99,8 +99,11 @@ let Draw = function(canvas, ctx){
 
     this.splicePath = function(i){
         draw.datas.path.splice(i, 1);
+        beginTransacion();
         runDDL(queries.deletePath(i+1));
-        runDDL(queries.shiftPath(i+1, 1));    }
+        runDDL(queries.shiftPath(i+1, 1));    
+        endTransacion();
+    }
 
     this.setStrokeWidth = function(width){
         ctx.lineWidth = width* this.zoom * this.res;

@@ -24,7 +24,18 @@ function runDDL(query){
     }
 }
 
+function beginTransacion(){
+    if(typeof Android !== "undefined" && Android !== null) {
+        Android.beginTransaction();
+    }
+}
 
+function endTransacion(){
+    if(typeof Android !== "undefined" && Android !== null) {
+        Android.successfulTransaction();
+        Android.endTransaction();
+    }
+}
 
 function getData(data){
     data = JSON.parse(data);
@@ -77,9 +88,11 @@ function insideRect(p1, p2, p){
 }
 
 var queries = {
-    workingTable : function(name){
-        return "CREATE TABLE IF NOT EXISTS " + name + " ( " +
-        "PAGE_NO INTEGER PRIMARY KEY, " +
+    filesTable : function(){
+        return "CREATE TABLE IF NOT EXISTS " + "FILES" + " ( " +
+        "NAME TEXT PRIMARY KEY, " +
+        "ROW INTEGER, " +
+        "COL INTEGER, " +
         "WIDTH INTEGER, " +
         "HEIGHT INTEGER );";
     },
@@ -111,7 +124,18 @@ var queries = {
     }
 }
 
+function initDim(){
+    var dim = JSON.parse(runSQL("SELECT * FROM FILES WHERE NAME = 'working' ;"))[0];
+    draw.datas.dim.width = parseInt( dim.WIDTH );
+    draw.datas.dim.height = parseInt( dim.HEIGHT );
+    draw.datas.grid.row = parseInt( dim.ROW );
+    draw.datas.grid.col = parseInt( dim.COL );
+}
+
 function loadPage(no){
+    $(".pageNo .no").html(no + "");
+    draw.datas.path = [];
+    draw.datas.points.arr = [];
     let datas = JSON.parse(runSQL("SELECT * FROM WORKINGPATH WHERE PAGE_NO = " + no + " ORDER BY PATH_NO") );
     for(let i = 0; i < datas.length; i++){
         draw.datas.path.push({
@@ -123,14 +147,33 @@ function loadPage(no){
     }
 }
 
+function saveFile(name){
+    runDDL(queries.pathTable(name + "_PATH_"));
+    beginTransacion();
+    runDDL("DELETE FROM FILES WHERE NAME = '" + name + "_FILE_' ; ");
+    runDDL("INSERT INTO FILES VALUES( '" + name + "_FILE_', " + draw.datas.grid.row + ", " +  
+        draw.datas.grid.col + ", " + draw.datas.dim.width + ", " + draw.datas.dim.height + ") ;" );
+    runDDL("DELETE FROM " + name + "_PATH_ ;");
+    runDDL("INSERT INTO " + name + "_PATH_ SELECT * FROM WORKINGPATH;");
+    runDDL("UPDATE SETTINGS SET OPENED = '" + name + "' ;");
+    endTransacion();
+}
+
 $(document).ready(function(){
     $(window).load(function(){
 
-        // runDDL("CREATE TABLE IF NOT EXISTS RHYTHM ( NAME TEXT, ROLL INTEGER);");
-        // runDDL("INSERT INTO RHYTHM VALUES('Toky', 21);");
-
-        runDDL(queries.workingTable("WORKING"));
+        runDDL(queries.filesTable());
         runDDL(queries.pathTable("WORKINGPATH"));
+        runDDL("CREATE TABLE IF NOT EXISTS SETTINGS ( SHOW_ON_START INTEGER, OPENED TEXT, PAGE_NO INTEGER ) ");
+        if(JSON.parse(runSQL("SELECT * FROM SETTINGS")).length == 0 ){
+            runDDL("INSERT INTO SETTINGS VALUES(1, '', 1)")
+        }
+        if(JSON.parse(runSQL("SELECT * FROM FILES")).length == 0 ){
+            runDDL("INSERT INTO FILES VALUES('working', 12, 1, 1000 , 1000 ) ; ");
+        }
+
+        console.log(JSON.parse(runSQL("SELECT * FROM FILES")));
+        console.log(JSON.parse(runSQL("SELECT * FROM SETTINGS")));
         console.log( runSQL("SELECT name FROM sqlite_master WHERE type='table' ") );
 
         let canvas = document.getElementById("stars");
@@ -146,16 +189,15 @@ $(document).ready(function(){
         var tZoom = 1;
         var tPos = {x : 0, y : 0};
 
-        runDDL(queries.blankPage("WORKING"));
-
         console.log( JSON.parse(runSQL("SELECT * FROM WORKINGPATH")) );
 
+        initDim();
+        pageNo = parseInt(JSON.parse(runSQL("SELECT PAGE_NO FROM SETTINGS;"))[0].PAGE_NO);
         loadPage(pageNo);
 
         $('#stars').on({ 'touchstart' : function(e){
             if(e.cancelable)
                 e.preventDefault();
-            console.log("started")
             var x = e.originalEvent.touches[0].pageX;
             var y = e.originalEvent.touches[0].pageY;
             start = e.originalEvent.touches;
@@ -234,7 +276,6 @@ $(document).ready(function(){
             var x = e.originalEvent.touches[0].pageX;
             var y = e.originalEvent.touches[0].pageY;
             end = e.originalEvent.touches;
-            console.log("moving");
             if(e.originalEvent.touches.length == 1){
                 if(draw.tool == "pencil"){
                     if(draw.datas.points.arr.length){
@@ -385,6 +426,7 @@ $(document).ready(function(){
             draw.pushUndo();
             draw.datas.path = [];
             draw.datas.points.arr = [];
+            runDDL("DELETE FROM WORKINGPATH WHERE PAGE_NO = " + pageNo + " ; ");            
             draw.redraw();
             sendAll();            
         })
@@ -478,9 +520,8 @@ $(document).ready(function(){
         $("#nav .next").on("click", function(){
             pageNo++;
             draw.datas.path = [];
-            draw.datas.points.arr = [];                    
-            $(".pageNo .no").html(pageNo + "");            
-            sendData({command : "getPage", pageNo : pageNo});
+            draw.datas.points.arr = [];
+            loadPage(pageNo);
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
@@ -489,17 +530,26 @@ $(document).ready(function(){
         $("#nav .prev").on("click", function(){
             if(pageNo == 1) return;
             pageNo--;
-            $(".pageNo .no").html(pageNo + "");            
-            sendData({command : "getPage", pageNo : pageNo});   
+            draw.datas.path = [];
+            draw.datas.points.arr = [];
+            loadPage(pageNo);
             draw.redraw();
             draw.undos = [];
             draw.redos = [];
         })
 
         $("#nav .new").on("click", function(){
+            var currentFile = JSON.parse( runSQL("SELECT OPENED FROM SETTINGS; ") )[0].OPENED;
+            if(currentFile != "")
+                saveFile(currentFile);
+            beginTransacion();
+            runDDL("DELETE FROM WORKINGPATH ;");
+            runDDL("UPDATE SETTINGS SET OPENED = '', PAGE_NO = 1;");
+            endTransacion();
             pageNo = 1;
-            $(".pageNo .no").html(pageNo + "");            
-            sendData({command : "new"});   
+            initDim();
+            loadPage(pageNo);
+
             draw.redraw();
             draw.undos = [];
             draw.redos = [];            
@@ -509,7 +559,14 @@ $(document).ready(function(){
             $(".saveDialog").show();
         })
         $("#nav .open").on("click", function(){
-            sendData({command : "fileList"});
+            var data = JSON.parse(runSQL("SELECT NAME FROM FILES WHERE NAME LIKE '%_FILE_' ; "));
+            $(".openDialog .list").html("");
+            console.log(data);
+            for(let i = 0; i < data.length; i++){
+                var str = '<div class = "item"><div class = "name">' + data[i].NAME.substring(0, data[i].NAME.length - 6) + 
+                '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "save">DELETE</a></div></div>';
+                $(".openDialog .list").append(str);
+            }
             $(".openDialog").show();
         })
         $("#nav .pdf").on("click", function(){
@@ -521,13 +578,27 @@ $(document).ready(function(){
             if(name.trim() == ""){
                 $(".saveDialog .message").html("File name can not be empty!")
             }else{
-                sendData( {command : "compile", name : name });
+                saveFile(name);
             }
         })
 
         $(".openDialog").on("click", ".open", function(){
             var name = $(this).closest(".item").find(".name").html();
-            sendData({command : "open", name : name});
+
+            var currentFile = JSON.parse( runSQL("SELECT OPENED FROM SETTINGS; ") )[0].OPENED;
+            if(currentFile != "")
+                saveFile(currentFile);
+            var dim = JSON.parse( runSQL("SELECT * FROM FILES WHERE NAME  = '" + name + "_FILE_' ;") )[0];
+            beginTransacion();
+            runDDL("DELETE FROM WORKINGPATH ;");
+            runDDL("INSERT INTO WORKINGPATH SELECT * FROM " + name + "_PATH_ ;");
+            runDDL("UPDATE SETTINGS SET OPENED = '" + name + "', PAGE_NO = 1;");
+            runDDL("UPDATE FILES SET ROW = " + dim.ROW + ", COL = " + dim.COL + ", WIDTH = " + 
+                dim.WIDTH + ", HEIGHT = " + dim.HEIGHT + " WHERE NAME = 'working'; ");
+            endTransacion();
+            pageNo = 1;
+            initDim();
+            loadPage(pageNo);
         })
         
         $(".closeIt").on("click", function(e){
@@ -558,8 +629,3 @@ function changeDim(point, z1, z2, init1, init2){
     point.y = changed.y;
 }
 
-// function func(e){
-//     e.preventDefault();
-// }
-
-// window.addEventListener("touchstart", func, {passive: false} );
