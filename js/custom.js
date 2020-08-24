@@ -102,24 +102,28 @@ var queries = {
         "PATH_NO INTEGER, " +
         "WIDTH REAL, " +
         "COLOR TEXT, " +
-        "PATH TEXT, " +
-        "PRIMARY KEY ( PAGE_NO, PATH_NO) );";
+        "PATH TEXT " +
+        " );";
     },
     blankPage : function(name){
         return "INSERT INTO " + name + " VALUES( " + pageNo + ", " + draw.datas.dim.width + 
                 ", " + draw.datas.dim.height + "); ";
     },
-    pushPath : function(path){
+    pushPath : function(path, pathNo = -1){
+        if(pathNo == -1) pathNo = draw.datas.path.length;
         return "INSERT INTO WORKINGPATH VALUES( " + 
-            pageNo + ", " + draw.datas.path.length + ", " + 
+            pageNo + ", " + pathNo + ", " + 
             path.width + ", '" + path.color + "', '" + JSON.stringify(path.arr) + "'); "
     },
     deletePath : function(pathNo){
         return "DELETE FROM WORKINGPATH WHERE PATH_NO = " + pathNo + " AND PAGE_NO = " + pageNo;
     },
-    shiftPath : function(from , by){
+    clearPage : function(){
+        return "DELETE FROM WORKINGPATH WHERE PAGE_NO = " + pageNo + " ;";
+    },
+    shiftPath : function(from , by, minus = true){
         return "UPDATE WORKINGPATH " +
-            "SET PATH_NO = " + "PATH_NO - " 
+            "SET PATH_NO = " + "PATH_NO" + (minus ? "-" : "+") 
             + by + " WHERE PAGE_NO = " + pageNo + " AND PATH_NO > " + from; 
     }
 }
@@ -136,6 +140,8 @@ function loadPage(no){
     $(".pageNo .no").html(no + "");
     draw.datas.path = [];
     draw.datas.points.arr = [];
+    draw.undos = [];
+    draw.redos = [];
     let datas = JSON.parse(runSQL("SELECT * FROM WORKINGPATH WHERE PAGE_NO = " + no + " ORDER BY PATH_NO") );
     for(let i = 0; i < datas.length; i++){
         draw.datas.path.push({
@@ -143,8 +149,9 @@ function loadPage(no){
             color : datas[i].COLOR,
             arr : JSON.parse(datas[i].PATH)
         });
-        draw.redraw();
     }
+    draw.redraw();    
+    runDDL("UPDATE SETTINGS SET PAGE_NO = " + no + " ;");
 }
 
 function saveFile(name){
@@ -165,6 +172,7 @@ $(document).ready(function(){
         runDDL(queries.filesTable());
         runDDL(queries.pathTable("WORKINGPATH"));
         runDDL("CREATE TABLE IF NOT EXISTS SETTINGS ( SHOW_ON_START INTEGER, OPENED TEXT, PAGE_NO INTEGER ) ");
+        runDDL("CREATE INDEX IF NOT EXISTS sorted_path ON WORKINGPATH(PAGE_NO, PATH_NO);")
         if(JSON.parse(runSQL("SELECT * FROM SETTINGS")).length == 0 ){
             runDDL("INSERT INTO SETTINGS VALUES(1, '', 1)")
         }
@@ -203,10 +211,12 @@ $(document).ready(function(){
             start = e.originalEvent.touches;
             draw.setStrokeWidth(strokeWidth);
             draw.setStrokeColor(strokeColor);
-            draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));            
+            let point = draw.revTransform({x : x, y : y});
+            point = {x : parseInt(point.x*100)/100, y : parseInt(point.y*100)/100};
+            draw.datas.points.arr.push(point);            
             draw.datas.points.width = strokeWidth;
             draw.datas.points.color = strokeColor;
-
+            draw.undoDatas = [];
             prevPoint = {x : x, y : y};
             if(draw.tool == "pencil"){
                 ctx.beginPath();
@@ -216,7 +226,18 @@ $(document).ready(function(){
                 if( (draw.selected.length && 
                 insideRect(draw.select.from, draw.select.to, {x : x, y : y})) ||
                 e.originalEvent.touches.length > 1){
-                    draw.pushUndo();
+                    // draw.pushUndo();
+                    if(e.originalEvent.touches.length == 1){
+                        let toPush = {type : "replace", datas : []};
+                        for(let i = 0; i < draw.selected.length; i++){
+                            if(draw.selected[i] == true){
+                                toPush.datas.push({index : i , path : JSON.parse(JSON.stringify(draw.datas.path[i]))});
+                            }
+                        }
+                        if(toPush.datas.length){
+                            draw.pushUndo(toPush);
+                        }        
+                    }
                     draw.moveFrom = {x : x, y : y};
                     moving = true;
                 }else{
@@ -230,11 +251,17 @@ $(document).ready(function(){
         
         $('#stars').on({ 'touchend' : function(e){
             if(draw.datas.points.arr.length && draw.tool == "pencil"){
-                draw.pushUndo();
+                // draw.pushUndo();
+                draw.pushUndo({type : "splice", datas : [draw.datas.path.length] })                
                 draw.pushPath();
             }
 
             draw.datas.points.arr = [];
+            if(draw.tool == "eraser" && draw.undoDatas.length){
+                draw.pushUndo({type : "insert", datas : draw.undoDatas});
+                draw.undoDatas = [];
+            }
+
             if(draw.tool == "select" && !moving){
                 draw.selected = [];
                 let from = draw.revTransform(draw.select.from);
@@ -250,6 +277,8 @@ $(document).ready(function(){
                     }
                     draw.selected.push(inside);
                 }
+            }else if(draw.tool == "select" && moving){
+                draw.handleMove();
             }
             draw.redraw();
             tZoom = 1;
@@ -279,7 +308,9 @@ $(document).ready(function(){
             if(e.originalEvent.touches.length == 1){
                 if(draw.tool == "pencil"){
                     if(draw.datas.points.arr.length){
-                        draw.datas.points.arr.push(draw.revTransform({x : x, y : y}));
+                        let point = draw.revTransform({x : x, y : y});
+                        point = {x : parseInt(point.x*100)/100, y : parseInt(point.y*100)/100};
+                        draw.datas.points.arr.push(point);
                         ctx.lineTo(x * draw.res, y * draw.res);
                         ctx.stroke();
                     }
@@ -290,6 +321,9 @@ $(document).ready(function(){
                         for(let j = 1; j < draw.datas.path[i].arr.length; j++){
                             let to = draw.transform(draw.datas.path[i].arr[j], false);
                             if(draw.intersect(from, to, prevPoint, curPoint)){
+                                draw.pushUndo({type : "insert", datas : 
+                                    [{index : i, path :draw.datas.path[i]}]
+                                });
                                 draw.splicePath(i);
                                 draw.redraw();
                                 sendAll();
@@ -405,11 +439,13 @@ $(document).ready(function(){
 
         $("#nav .undo").on("click", function(){
             draw.performUndo();            
-            sendAll();            
+            console.log(draw.undos);
+            // sendAll();
         })
 
         $("#nav .redo").on("click", function(){
             draw.performRedo();
+            console.log(draw.redos);            
             sendAll();
         })
 
@@ -423,7 +459,8 @@ $(document).ready(function(){
         })
 
         $("#nav .clear").on("click", function(){
-            draw.pushUndo();
+            // draw.pushUndo();
+            draw.pushUndo({type : "full", datas : JSON.parse(JSON.stringify(draw.datas)) })
             draw.datas.path = [];
             draw.datas.points.arr = [];
             runDDL("DELETE FROM WORKINGPATH WHERE PAGE_NO = " + pageNo + " ; ");            
@@ -456,20 +493,21 @@ $(document).ready(function(){
 
         $(".selectOption .cut").on("click", function(){
             draw.clipBoard = [];
-            draw.pushUndo();
             for(let i = draw.selected.length-1; i >= 0; i--){
                 if(draw.selected[i]){
                     draw.clipBoard.push(JSON.parse(JSON.stringify(draw.datas.path[i])));
+                    draw.undoDatas.push({index : i, path : draw.datas.path[i]});
                     draw.splicePath(i);
                 }
             }
             draw.selected = [];
+            draw.pushUndo({type : "insert", datas : draw.undoDatas});
+            draw.undoDatas = [];
             draw.redraw();
-            sendAll();
         })
+
         $(".selectOption .paste").on("click", function(){
             if(draw.clipBoard.length){
-                draw.pushUndo();
                 var mn = {x : 1000000000, y : 1000000000};
                 var mx = {x : -1000000000, y : -1000000000};
                 for(let i = 0; i < draw.clipBoard.length; i++){
@@ -488,9 +526,12 @@ $(document).ready(function(){
                 draw.selected = [];
                 for(var i = 0; i < draw.datas.path.length; i++) draw.selected.push(false);
                 for(let i = 0; i < draw.clipBoard.length; i++){
-                    draw.pushPath( draw.clipBoard[i] );
+                    draw.undoDatas.push(draw.datas.path.length);
+                    draw.pushPath( JSON.parse( JSON.stringify( draw.clipBoard[i] ) ) );
                     draw.selected.push(true);
                 }
+                draw.pushUndo({type : "splice", datas : draw.undoDatas});
+                draw.undoDatas = [];
                 mx.x = (mx.x - mn.x) + draw.init.x+200, mx.y = (mx.y - mn.y) + draw.init.y+50;
                 mn.x = draw.init.x+200, mn.y = draw.init.y+50;
                 draw.select.from = draw.transform(mn, false);
@@ -523,8 +564,6 @@ $(document).ready(function(){
             draw.datas.points.arr = [];
             loadPage(pageNo);
             draw.redraw();
-            draw.undos = [];
-            draw.redos = [];
         })
 
         $("#nav .prev").on("click", function(){
@@ -534,8 +573,6 @@ $(document).ready(function(){
             draw.datas.points.arr = [];
             loadPage(pageNo);
             draw.redraw();
-            draw.undos = [];
-            draw.redos = [];
         })
 
         $("#nav .new").on("click", function(){
@@ -551,8 +588,6 @@ $(document).ready(function(){
             loadPage(pageNo);
 
             draw.redraw();
-            draw.undos = [];
-            draw.redos = [];            
         })
 
         $("#nav .save").on("click", function(){
@@ -569,6 +604,7 @@ $(document).ready(function(){
             }
             $(".openDialog").show();
         })
+
         $("#nav .pdf").on("click", function(){
             sendData({command : "pdf"});
         })

@@ -23,6 +23,7 @@ let Draw = function(canvas, ctx){
     };
     this.selected = [];
     this.clipBoard = [];
+    this.undoDatas = [];
     this.moveFrom;
 
     this.distance = function (point1, point2){
@@ -59,42 +60,102 @@ let Draw = function(canvas, ctx){
         else return false;
     }
 
-    this.pushUndo = function(){
-        let toPush =  JSON.parse(JSON.stringify(this.datas));
-        toPush.points.arr = [];
-        this.undos.push(toPush);
-        if(this.undos.length > 10){
-            this.undos.shift();
-        }
+    this.pushUndo = function(action){
+        this.undos.push(action);
         this.redos = [];
     }
 
     this.performUndo = function(){
         if(this.undos.length){
-            let toPush =  JSON.parse(JSON.stringify(this.datas));
-            toPush.points.arr = [];
-            this.redos.push(toPush);
-            this.datas = this.undos.pop();
+            let action = this.undos.pop();
+            this.redos.push(this.reverseAction(action));
+            this.performAction(action);
             this.redraw();
         }
     }
 
     this.performRedo = function(){
         if(this.redos.length){
-            let toPush =  JSON.parse(JSON.stringify(this.datas));
-            toPush.points.arr = [];
-            this.undos.push(toPush);
-            this.datas = this.redos.pop();
+            let action = this.redos.pop();
+            this.undos.push(this.reverseAction(action));
+            this.performAction(action);
             this.redraw();
         }
     }
 
-    this.pushPath = function(path = null){
+    this.performAction = function(action){
+        if(action.type == "insert"){
+            for(let i = action.datas.length-1; i >= 0; i--){
+                this.pushPath(action.datas[i].path, action.datas[i].index);
+            }
+        }else if(action.type == "splice"){
+            for(let i = action.datas.length-1; i >= 0; i--){
+                this.splicePath(action.datas[i]);
+            }
+        }else if(action.type == "replace"){
+            beginTransacion();
+            console.log(JSON.parse(JSON.stringify(action)));
+            for(let i = 0; i < action.datas.length; i++){
+                let index = action.datas[i].index;
+                this.datas.path[index] =  action.datas[i].path;
+                runDDL(queries.deletePath(index+1));
+                runDDL(queries.pushPath(action.datas[i].path , index+1));
+            }
+            endTransacion();
+        }else if(action.type == "full"){
+            this.datas = action.datas;
+            beginTransacion();
+            runDDL(queries.clearPage() );
+            for(let i = 0; i < this.datas.path.length; i++){
+                runDDL(queries.pushPath(this.datas.path[i], i+1));                
+            }
+            endTransacion();
+        }
+
+    }
+
+    this.reverseAction = function(action){
+        console.log(action)
+        let ret = {type : "", datas : []};
+        if(action.type == "insert"){
+            ret.type = "splice";
+            for(let i = action.datas.length-1; i >= 0; i--){
+                ret.datas.push(action.datas[i].index);
+            }
+        }else if(action.type == "splice"){
+            ret.type = "insert";
+            for(let i = action.datas.length-1; i >= 0; i--){
+                let index = action.datas[i];
+                console.log(index , this.datas.path[index])
+                ret.datas.push({index : index, path : JSON.parse(JSON.stringify( this.datas.path[index] ))});
+            }
+        }else if(action.type == "replace"){
+            ret.type = "replace";
+            for(let i = action.datas.length-1; i >= 0; i--){
+                let index = action.datas[i].index;
+                ret.datas.push({index : index, path : JSON.parse(JSON.stringify( this.datas.path[index] ))});
+            }
+        }else if(action.type == "full"){
+            ret.type = "full";
+            ret.datas = JSON.parse(JSON.stringify(this.datas));
+        }
+        return ret;
+    }
+
+    this.pushPath = function(path = null, index = -1){
         if(!path){
             path = JSON.parse(JSON.stringify(this.datas.points) );
         }
-        this.datas.path.push( path );
-        runDDL(queries.pushPath(path));
+        if(index == -1){
+            this.datas.path.push( path );
+            runDDL(queries.pushPath(path));
+        }else{
+            this.datas.path.splice( index, 0 , path );
+            beginTransacion();
+            runDDL(queries.shiftPath(index, 1, false));
+            runDDL(queries.pushPath( path, index+1 ));
+            endTransacion();
+        }
     }
 
     this.splicePath = function(i){
@@ -102,6 +163,18 @@ let Draw = function(canvas, ctx){
         beginTransacion();
         runDDL(queries.deletePath(i+1));
         runDDL(queries.shiftPath(i+1, 1));    
+        endTransacion();
+    }
+
+
+    this.handleMove = function(){
+        beginTransacion();
+        for(let i = 0; i < this.selected.length; i++){
+            if(this.selected[i]){
+                runDDL(queries.deletePath(i+1));
+                runDDL(queries.pushPath(this.datas.path[i] , i+1));
+            }
+        }
         endTransacion();
     }
 
