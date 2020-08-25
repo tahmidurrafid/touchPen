@@ -3,7 +3,6 @@
     <head>
         <title>Tahmidur Rafid</title>
         <link rel = "stylesheet" href = "css/style.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type = "text/javascript" src = "js/jquery.min.js"></script>
         <script type = "text/javascript" src = "client/js/draw.js"></script>
         <script type = "text/javascript" src = "js/custom.js"></script>
@@ -104,8 +103,9 @@
         <canvas id = "stars">
         </canvas>
 
+        <div class = "overlay" style = "display: none;"></div>
         <div class = "settings popup">
-            <div class = "closeIt"><img src="images/undo.svg" /> </div>
+            <div class = "closeIt"><img src="images/close.svg" /> </div>
             <div class = "option">
                 <div class = "caption">Canvas Size:</div>
                 <div class = "item">
@@ -151,7 +151,7 @@
         <div class = "pageNo">Page: <span class = "no">1</span></div>
 
         <div class = "connectPC popup" style = "display : none">
-            <div class = "closeIt"><img src="images/undo.svg" /> </div>
+            <div class = "closeIt"><img src="images/close.svg" /> </div>
             <div class = "line">To view the canvas on your PC/Laptop:</div>
             <div class = "line">First connect your pc and your phone over the same wifi network ans restart this app.</div>
             <div class = "line">
@@ -167,7 +167,7 @@
             </div>
         </div>
         <div class = "openDialog" style = "display: none;">
-            <div class = "closeIt"><img src="images/undo.svg" /> </div>
+            <div class = "closeIt"><img src="images/close.svg" /> </div>
             <div class = "list">
                 <div class = "item">
                     <div class = "name">Todays Class</div>
@@ -179,8 +179,8 @@
             </div>
         </div>
         <div class = "saveDialog" style = "display: none;">
-            <div class = "closeIt"><img src="images/undo.svg" /> </div>
-            <div class = "name"><input type = "text" /></div>
+            <div class = "closeIt"><img src="images/close.svg" /> </div>
+            <div class = "name"><span>File Name: </span><input type = "text" /></div>
             <div class = "message"></div>
             <div class = "button">
                 <a href = "#">SAVE</a>

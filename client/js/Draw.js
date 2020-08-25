@@ -189,7 +189,7 @@ let Draw = function(canvas, ctx){
         $("canvas").css("transform", "matrix(1, 0, 0, 1, 0, 0)");
         ctx.clearRect(0, 0 , canvas.width, canvas.height);
         if(this.server){
-            let gap = (this.datas.dim.width)/(this.datas.grid.row + 1);
+            let gap = (this.datas.dim.height)/(this.datas.grid.row + 1);
             ctx.lineWidth = 1;
             ctx.strokeStyle = "#aaa";
             for(let i = 1; i <= this.datas.grid.row; i++){
@@ -200,7 +200,7 @@ let Draw = function(canvas, ctx){
                 ctx.lineTo(to.x, to.y);
                 ctx.stroke();
             }
-            gap = (this.datas.dim.height)/(this.datas.grid.col + 1);
+            gap = (this.datas.dim.width)/(this.datas.grid.col + 1);
             for(let i = 1; i <= this.datas.grid.col; i++){
                 ctx.beginPath();
                 let from = this.transform({x : gap*i, y : 0});            

@@ -90,6 +90,7 @@ function insideRect(p1, p2, p){
 var queries = {
     filesTable : function(){
         return "CREATE TABLE IF NOT EXISTS " + "FILES" + " ( " +
+        "ID INTEGER, " + 
         "NAME TEXT PRIMARY KEY, " +
         "ROW INTEGER, " +
         "COL INTEGER, " +
@@ -155,34 +156,27 @@ function loadPage(no){
 }
 
 function saveFile(name){
-    runDDL(queries.pathTable(name + "_PATH_"));
+    let res = JSON.parse(runSQL("SELECT (ID+1) as 'VAL' FROM FILES  WHERE (ID+1) NOT IN(SELECT ID FROM FILES) ORDER BY ID ;"));
+    console.log(JSON.parse(JSON.stringify(res)));
+    let id = res[0].VAL;
+    res = JSON.parse(runSQL("SELECT ID FROM FILES WHERE NAME = '" + name + "_FILE_' ;"));
+    if(res.length){
+        id = res[0].ID;
+    }
+
     beginTransacion();
+    runDDL(queries.pathTable("T" + id + "_PATH_"));
     runDDL("DELETE FROM FILES WHERE NAME = '" + name + "_FILE_' ; ");
-    runDDL("INSERT INTO FILES VALUES( '" + name + "_FILE_', " + draw.datas.grid.row + ", " +  
+    runDDL("INSERT INTO FILES VALUES( " + id + ",'" + name + "_FILE_', " + draw.datas.grid.row + ", " +  
         draw.datas.grid.col + ", " + draw.datas.dim.width + ", " + draw.datas.dim.height + ") ;" );
-    runDDL("DELETE FROM " + name + "_PATH_ ;");
-    runDDL("INSERT INTO " + name + "_PATH_ SELECT * FROM WORKINGPATH;");
+    runDDL("DELETE FROM T" + id + "_PATH_ ;");
+    runDDL("INSERT INTO T" + id + "_PATH_ SELECT * FROM WORKINGPATH;");
     runDDL("UPDATE SETTINGS SET OPENED = '" + name + "' ;");
     endTransacion();
 }
 
 $(document).ready(function(){
     $(window).load(function(){
-
-        runDDL(queries.filesTable());
-        runDDL(queries.pathTable("WORKINGPATH"));
-        runDDL("CREATE TABLE IF NOT EXISTS SETTINGS ( SHOW_ON_START INTEGER, OPENED TEXT, PAGE_NO INTEGER ) ");
-        runDDL("CREATE INDEX IF NOT EXISTS sorted_path ON WORKINGPATH(PAGE_NO, PATH_NO);")
-        if(JSON.parse(runSQL("SELECT * FROM SETTINGS")).length == 0 ){
-            runDDL("INSERT INTO SETTINGS VALUES(1, '', 1)")
-        }
-        if(JSON.parse(runSQL("SELECT * FROM FILES")).length == 0 ){
-            runDDL("INSERT INTO FILES VALUES('working', 12, 1, 1000 , 1000 ) ; ");
-        }
-
-        console.log(JSON.parse(runSQL("SELECT * FROM FILES")));
-        console.log(JSON.parse(runSQL("SELECT * FROM SETTINGS")));
-        console.log( runSQL("SELECT name FROM sqlite_master WHERE type='table' ") );
 
         let canvas = document.getElementById("stars");
         var ctx = canvas.getContext("2d");
@@ -197,11 +191,30 @@ $(document).ready(function(){
         var tZoom = 1;
         var tPos = {x : 0, y : 0};
 
-        console.log( JSON.parse(runSQL("SELECT * FROM WORKINGPATH")) );
-
-        initDim();
-        pageNo = parseInt(JSON.parse(runSQL("SELECT PAGE_NO FROM SETTINGS;"))[0].PAGE_NO);
-        loadPage(pageNo);
+        try {
+            runDDL(queries.filesTable());
+            runDDL(queries.pathTable("WORKINGPATH"));
+            runDDL("CREATE TABLE IF NOT EXISTS SETTINGS ( SHOW_ON_START INTEGER, OPENED TEXT, PAGE_NO INTEGER ) ");
+            runDDL("CREATE INDEX IF NOT EXISTS sorted_path ON WORKINGPATH(PAGE_NO, PATH_NO);")
+            if(JSON.parse(runSQL("SELECT * FROM SETTINGS")).length == 0 ){
+                runDDL("INSERT INTO SETTINGS VALUES(1, '', 1)")
+            }
+            if(JSON.parse(runSQL("SELECT * FROM FILES")).length == 0 ){
+                runDDL("INSERT INTO FILES VALUES(1 , 'working', 12, 1, 1000 , 1000 ) ; ");
+            }
+            console.log(JSON.parse(runSQL("SELECT * FROM FILES")));
+            console.log(JSON.parse(runSQL("SELECT * FROM SETTINGS")));
+            console.log( runSQL("SELECT name FROM sqlite_master WHERE type='table' ") );            
+            console.log( JSON.parse(runSQL("SELECT * FROM WORKINGPATH")) );
+            if(JSON.parse( runSQL("SELECT * FROM SETTINGS"))[0].SHOW_ON_START == "1"){
+                $(".connectPC").show();
+            }
+            initDim();
+            pageNo = parseInt(JSON.parse(runSQL("SELECT PAGE_NO FROM SETTINGS;"))[0].PAGE_NO);
+            loadPage(pageNo);            
+        }
+        catch(err) {
+        }
 
         $('#stars').on({ 'touchstart' : function(e){
             if(e.cancelable)
@@ -542,20 +555,29 @@ $(document).ready(function(){
 
         $("#nav .settings").on("click", function(){
             $(".settings.popup").show();
+            $(".overlay").show();
             $(".dimWidth").val(draw.datas.dim.width);
             $(".dimHeight").val(draw.datas.dim.height);
             $(".gridRow").val(draw.datas.grid.row);
             $(".gridCol").val(draw.datas.grid.col);
+            let val = (JSON.parse(runSQL("SELECT SHOW_ON_START FROM SETTINGS"))[0].SHOW_ON_START == "1");
+            $(".settings.popup .startPopup").prop("checked", val);
         });
 
         $(".settings.popup .button a").on("click", function(){
             $(".settings.popup").hide();
+            $(".overlay").hide();
             draw.datas.dim.width = checkNumber($(".dimWidth").val(), draw.datas.dim.width);
             draw.datas.dim.height = checkNumber( $(".dimHeight").val(), draw.datas.dim.height);
             draw.datas.grid.row = checkNumber( $(".gridRow").val(), draw.datas.grid.row );
             draw.datas.grid.col = checkNumber( $(".gridCol").val(), draw.datas.grid.col );
+            let val = $(".settings.popup .startPopup").prop("checked") ? 1 : 0;
+            runDDL("UPDATE SETTINGS SET SHOW_ON_START = " + val + "; ");
+            runDDL("UPDATE FILES SET WIDTH = " + draw.datas.dim.width + 
+                    ", HEIGHT = " + draw.datas.dim.height + 
+                    ", ROW = " + draw.datas.grid.row + 
+                    ", COL = " + draw.datas.grid.col + " WHERE ID = 1")
             draw.redraw();
-            sendAll();            
         })
 
         $("#nav .next").on("click", function(){
@@ -592,17 +614,19 @@ $(document).ready(function(){
 
         $("#nav .save").on("click", function(){
             $(".saveDialog").show();
+            $(".overlay").show();
+
         })
         $("#nav .open").on("click", function(){
             var data = JSON.parse(runSQL("SELECT NAME FROM FILES WHERE NAME LIKE '%_FILE_' ; "));
             $(".openDialog .list").html("");
-            console.log(data);
             for(let i = 0; i < data.length; i++){
                 var str = '<div class = "item"><div class = "name">' + data[i].NAME.substring(0, data[i].NAME.length - 6) + 
-                '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "save">DELETE</a></div></div>';
+                '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "delete">DELETE</a></div></div>';
                 $(".openDialog .list").append(str);
             }
             $(".openDialog").show();
+            $(".overlay").show();
         })
 
         $("#nav .pdf").on("click", function(){
@@ -612,9 +636,26 @@ $(document).ready(function(){
         $(".saveDialog .button").on("click", function(){
             let name = $(".saveDialog .name input").val().trim();
             if(name.trim() == ""){
-                $(".saveDialog .message").html("File name can not be empty!")
+                $(".saveDialog .message").html("File name can not be empty!");
             }else{
                 saveFile(name);
+                $(".saveDialog").hide();            
+                $(".overlay").hide();                
+            }
+        })
+
+        $(".openDialog").on("click", ".delete", function(){
+            if($(this).hasClass("warn")){
+                var name = $(this).closest(".item").find(".name").html();
+                var dim = JSON.parse( runSQL("SELECT * FROM FILES WHERE NAME  = '" + name + "_FILE_' ;") )[0];
+                beginTransacion();
+                runDDL("DROP TABLE T" + dim.ID + "_PATH_");
+                runDDL("DELETE FROM FILES WHERE NAME = '" + name + "_FILE_' ; ");
+                $(this).closest(".item").remove();
+                endTransacion();                
+            }else{
+                $(this).addClass("warn");
+                $(this).html("sure?");
             }
         })
 
@@ -627,7 +668,7 @@ $(document).ready(function(){
             var dim = JSON.parse( runSQL("SELECT * FROM FILES WHERE NAME  = '" + name + "_FILE_' ;") )[0];
             beginTransacion();
             runDDL("DELETE FROM WORKINGPATH ;");
-            runDDL("INSERT INTO WORKINGPATH SELECT * FROM " + name + "_PATH_ ;");
+            runDDL("INSERT INTO WORKINGPATH SELECT * FROM T" + dim.ID + "_PATH_ ;");
             runDDL("UPDATE SETTINGS SET OPENED = '" + name + "', PAGE_NO = 1;");
             runDDL("UPDATE FILES SET ROW = " + dim.ROW + ", COL = " + dim.COL + ", WIDTH = " + 
                 dim.WIDTH + ", HEIGHT = " + dim.HEIGHT + " WHERE NAME = 'working'; ");
@@ -635,10 +676,13 @@ $(document).ready(function(){
             pageNo = 1;
             initDim();
             loadPage(pageNo);
+            $(".openDialog").hide();
+            $(".overlay").hide();
         })
         
         $(".closeIt").on("click", function(e){
             $(this).parent().hide();            
+            $(".overlay").hide();
         })
 
         $(document).on("click", "a" , function(e){
@@ -650,6 +694,9 @@ $(document).ready(function(){
             draw.redraw();
             let height = $("#nav>div").height();
             $("#nav>div").width(height + "px");
+            $("#nav .sub-more .item").width(height + "px");
+            $("#nav .sub-more .item").height(height + "px");
+
         }
         window.addEventListener('resize', resizeCanvas, false);        
         resizeCanvas();
