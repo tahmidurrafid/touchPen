@@ -6,6 +6,7 @@ let pageNo = 1;
 let into;
 
 function sendData(data, isJson = true) {
+    console.log(data);
     if(typeof Android !== "undefined" && Android !== null) {
         Android.storeInQueue(isJson? JSON.stringify(data) : data);
     }
@@ -42,38 +43,14 @@ function getData(data){
     if(data.type == "ip"){
         $(".address").html(data.data);
 
-    }else if(data.type == "datas" && data.data){
-        draw.datas = data.data;
-        pageNo = parseInt(data.pageNo);
-        $(".pageNo .no").html(pageNo + "");
-        draw.redraw();
-        sendAll();
     }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
-            sendData({type : "datas", data : draw.datas});
+            sendData("clear", false);
+            sendData({type : "full", data : draw.datas});
         }else{
             reqestPending = true;
         }
-
-    }else if(data.type == "fileList"){
-        $(".openDialog .list").html("");        
-        for(var i = 0; i < data.data.length; i++){
-            var str = '<div class = "item"><div class = "name">' + data.data[i] + 
-            '</div><div class = "options"><a href = "#" class = "open">OPEN</a><a href = "#" class = "save">DELETE</a></div></div>';
-            $(".openDialog .list").append(str);
-        }
-    }else if(data.type = "clear"){
-        draw.datas.path = [];
-        draw.datas.points.arr = [];
-        draw.redraw();
-        sendAll();
     }
-}
-
-function sendAll(saveOnly = false)
-{
-    var command = saveOnly? "saveOnly" : "save";
-    sendData({type : "datas", pageNo : pageNo + "", data : draw.datas, command : command});
 }
 
 function checkNumber(a, b){
@@ -153,6 +130,8 @@ function loadPage(no){
     }
     draw.redraw();    
     runDDL("UPDATE SETTINGS SET PAGE_NO = " + no + " ;");
+    sendData("clear", false);
+    sendData({type : "full", datas : draw.datas});
 }
 
 function saveFile(name){
@@ -239,7 +218,6 @@ $(document).ready(function(){
                 if( (draw.selected.length && 
                 insideRect(draw.select.from, draw.select.to, {x : x, y : y})) ||
                 e.originalEvent.touches.length > 1){
-                    // draw.pushUndo();
                     if(e.originalEvent.touches.length == 1){
                         let toPush = {type : "replace", datas : []};
                         for(let i = 0; i < draw.selected.length; i++){
@@ -249,7 +227,7 @@ $(document).ready(function(){
                         }
                         if(toPush.datas.length){
                             draw.pushUndo(toPush);
-                        }        
+                        }
                     }
                     draw.moveFrom = {x : x, y : y};
                     moving = true;
@@ -264,9 +242,10 @@ $(document).ready(function(){
         
         $('#stars').on({ 'touchend' : function(e){
             if(draw.datas.points.arr.length && draw.tool == "pencil"){
-                // draw.pushUndo();
-                draw.pushUndo({type : "splice", datas : [draw.datas.path.length] })                
+                draw.pushUndo({type : "splice", datas : [draw.datas.path.length] })
                 draw.pushPath();
+                let index = draw.datas.path.length-1;
+                sendData({type : "insert", datas : [{index : index, path : draw.datas.path[index]}] });
             }
 
             draw.datas.points.arr = [];
@@ -291,16 +270,24 @@ $(document).ready(function(){
                     draw.selected.push(inside);
                 }
             }else if(draw.tool == "select" && moving){
+                let toPush = {type : "replace", datas : []};
+                for(let i = 0; i < draw.selected.length; i++){
+                    if(draw.selected[i] == true){
+                        toPush.datas.push({index : i , path : draw.datas.path[i] });
+                    }
+                }
+                if(toPush.datas.length){
+                    sendData(toPush);
+                }
                 draw.handleMove();
             }
             draw.redraw();
             tZoom = 1;
             tPos.x = tPos.y = 0;
             if(reqestPending){
-                sendAll();
+
                 reqestPending = false;
             }
-            sendAll(true);
             return true;
         }});
 
@@ -339,7 +326,7 @@ $(document).ready(function(){
                                 });
                                 draw.splicePath(i);
                                 draw.redraw();
-                                sendAll();
+                                sendData({type : "splice", datas : [i] });
                                 break;
                             }
                             from = to;
@@ -453,13 +440,11 @@ $(document).ready(function(){
         $("#nav .undo").on("click", function(){
             draw.performUndo();            
             console.log(draw.undos);
-            // sendAll();
         })
 
         $("#nav .redo").on("click", function(){
             draw.performRedo();
-            console.log(draw.redos);            
-            sendAll();
+            console.log(draw.redos);
         })
 
         $(".connectPC .button").on("click", function(){
@@ -472,13 +457,13 @@ $(document).ready(function(){
         })
 
         $("#nav .clear").on("click", function(){
-            // draw.pushUndo();
             draw.pushUndo({type : "full", datas : JSON.parse(JSON.stringify(draw.datas)) })
             draw.datas.path = [];
             draw.datas.points.arr = [];
             runDDL("DELETE FROM WORKINGPATH WHERE PAGE_NO = " + pageNo + " ; ");            
             draw.redraw();
-            sendAll();            
+            sendData("clear", false);
+            sendData({type : "full", datas : draw.datas });
         })
 
         $("#nav .select").on("click", function(){
@@ -506,15 +491,20 @@ $(document).ready(function(){
 
         $(".selectOption .cut").on("click", function(){
             draw.clipBoard = [];
+            let toSend = [];
             for(let i = draw.selected.length-1; i >= 0; i--){
                 if(draw.selected[i]){
                     draw.clipBoard.push(JSON.parse(JSON.stringify(draw.datas.path[i])));
                     draw.undoDatas.push({index : i, path : draw.datas.path[i]});
                     draw.splicePath(i);
+                    toSend.push(i);
                 }
             }
             draw.selected = [];
             draw.pushUndo({type : "insert", datas : draw.undoDatas});
+
+            toSend.reverse();
+            sendData({type : "splice", datas : toSend});
             draw.undoDatas = [];
             draw.redraw();
         })
@@ -538,12 +528,15 @@ $(document).ready(function(){
                 }
                 draw.selected = [];
                 for(var i = 0; i < draw.datas.path.length; i++) draw.selected.push(false);
+                let toSend = [];
                 for(let i = 0; i < draw.clipBoard.length; i++){
                     draw.undoDatas.push(draw.datas.path.length);
                     draw.pushPath( JSON.parse( JSON.stringify( draw.clipBoard[i] ) ) );
+                    toSend.push({index : draw.selected.length, path : draw.clipBoard[i]});                    
                     draw.selected.push(true);
                 }
                 draw.pushUndo({type : "splice", datas : draw.undoDatas});
+                sendData({type : "insert", datas : toSend});
                 draw.undoDatas = [];
                 mx.x = (mx.x - mn.x) + draw.init.x+200, mx.y = (mx.y - mn.y) + draw.init.y+50;
                 mn.x = draw.init.x+200, mn.y = draw.init.y+50;

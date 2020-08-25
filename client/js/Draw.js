@@ -84,6 +84,9 @@ let Draw = function(canvas, ctx){
     }
 
     this.performAction = function(action){
+        if(server){
+            sendData(action);
+        }
         if(action.type == "insert"){
             for(let i = action.datas.length-1; i >= 0; i--){
                 this.pushPath(action.datas[i].path, action.datas[i].index);
