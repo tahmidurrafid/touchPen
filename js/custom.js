@@ -6,7 +6,6 @@ let pageNo = 1;
 let into;
 
 function sendData(data, isJson = true) {
-    console.log(data);
     if(typeof Android !== "undefined" && Android !== null) {
         Android.storeInQueue(isJson? JSON.stringify(data) : data);
     }
@@ -46,7 +45,7 @@ function getData(data){
     }else if(data.type == "datas" ){
         if(draw.datas.points.arr.length == 0){
             sendData("clear", false);
-            sendData({type : "full", data : draw.datas});
+            sendData({type : "full", datas : draw.datas});
         }else{
             reqestPending = true;
         }
@@ -136,7 +135,6 @@ function loadPage(no){
 
 function saveFile(name){
     let res = JSON.parse(runSQL("SELECT (ID+1) as 'VAL' FROM FILES  WHERE (ID+1) NOT IN(SELECT ID FROM FILES) ORDER BY ID ;"));
-    console.log(JSON.parse(JSON.stringify(res)));
     let id = res[0].VAL;
     res = JSON.parse(runSQL("SELECT ID FROM FILES WHERE NAME = '" + name + "_FILE_' ;"));
     if(res.length){
@@ -179,18 +177,19 @@ $(document).ready(function(){
                 runDDL("INSERT INTO SETTINGS VALUES(1, '', 1)")
             }
             if(JSON.parse(runSQL("SELECT * FROM FILES")).length == 0 ){
-                runDDL("INSERT INTO FILES VALUES(1 , 'working', 12, 1, 1000 , 1000 ) ; ");
+                runDDL("INSERT INTO FILES VALUES(1 , 'working', 12, 1, 1200 , 1000 ) ; ");
             }
-            console.log(JSON.parse(runSQL("SELECT * FROM FILES")));
-            console.log(JSON.parse(runSQL("SELECT * FROM SETTINGS")));
-            console.log( runSQL("SELECT name FROM sqlite_master WHERE type='table' ") );            
-            console.log( JSON.parse(runSQL("SELECT * FROM WORKINGPATH")) );
+            // console.log(JSON.parse(runSQL("SELECT * FROM FILES")));
+            // console.log(JSON.parse(runSQL("SELECT * FROM SETTINGS")));
+            // console.log( runSQL("SELECT name FROM sqlite_master WHERE type='table' ") );            
+            // console.log( JSON.parse(runSQL("SELECT * FROM WORKINGPATH")) );
             if(JSON.parse( runSQL("SELECT * FROM SETTINGS"))[0].SHOW_ON_START == "1"){
                 $(".connectPC").show();
             }
             initDim();
             pageNo = parseInt(JSON.parse(runSQL("SELECT PAGE_NO FROM SETTINGS;"))[0].PAGE_NO);
-            loadPage(pageNo);            
+            loadPage(pageNo);
+            sendData("ip", false);
         }
         catch(err) {
         }
@@ -285,22 +284,26 @@ $(document).ready(function(){
             tZoom = 1;
             tPos.x = tPos.y = 0;
             if(reqestPending){
-
+                sendData("clear", false);
+                sendData({type : "full", datas : draw.datas});    
                 reqestPending = false;
             }
             return true;
         }});
 
-        $("body").on({ 'touchmove' : function(e){
-            if(e.cancelable)
-                e.preventDefault();
-        }});
-        $("body").on({ 'touchstart' : function(e){
-            if(e.cancelable)
-                e.preventDefault();
-        }});
+        // $("body").on({ 'touchmove' : function(e){
+        //     if(e.cancelable)
+        //         e.preventDefault();
+        // }});
+        // $("body").on({ 'touchstart' : function(e){
+        //     if(e.cancelable)
+        //         e.preventDefault();
+        // }});
         
         $('#stars').on({ 'touchmove' : function(e){
+
+            if(e.cancelable)
+                e.preventDefault();
 
             var x = e.originalEvent.touches[0].pageX;
             var y = e.originalEvent.touches[0].pageY;
@@ -421,33 +424,40 @@ $(document).ready(function(){
             strokeColor = $(this).attr("data-color");
         });
 
-        var sliderPrev = 0;        
+              
         $("#nav .pencil-sub .slider").on({ 'touchstart' : function(e){
-            sliderPrev = e.originalEvent.touches[0].pageX;
-        } });
-
-        $("#nav .pencil-sub .slider").on({ 'touchmove' : function(e){
             var x = e.originalEvent.touches[0].pageX;
-            strokeWidth = strokeWidth + (x - sliderPrev)/50;
+            var offset = $(".slider").offset().left;
+            var width = $(".slider").width();
+            strokeWidth = 10*(x - offset)/width;
             if(strokeWidth > 10) strokeWidth = 10;
             if(strokeWidth < 1) strokeWidth = 1;
             strokeWidth = Math.round(strokeWidth*10)/10;
             $(".pencil-sub .slider .vert").css("left", (strokeWidth*10) + "%" );
             $(".pencil-sub .stroke").html(strokeWidth + "");
-            sliderPrev = x;
+        } });
+
+        $("#nav .pencil-sub .slider").on({ 'touchmove' : function(e){
+            var x = e.originalEvent.touches[0].pageX;
+            var offset = $(".slider").offset().left;
+            var width = $(".slider .hori").width();
+            strokeWidth = 10*(x - offset)/width;
+            if(strokeWidth > 10) strokeWidth = 10;
+            if(strokeWidth < 1) strokeWidth = 1;
+            strokeWidth = Math.round(strokeWidth*10)/10;
+            $(".pencil-sub .slider .vert").css("left", (strokeWidth*10) + "%" );
+            $(".pencil-sub .stroke").html(strokeWidth + "");
         }});
 
         $("#nav .undo").on("click", function(){
-            draw.performUndo();            
-            console.log(draw.undos);
+            draw.performUndo();
         })
 
         $("#nav .redo").on("click", function(){
             draw.performRedo();
-            console.log(draw.redos);
         })
 
-        $(".connectPC .button").on("click", function(){
+        $(".connectPC .button a").on("click", function(){
             $(".connectPC").hide();
         })
 
@@ -623,10 +633,10 @@ $(document).ready(function(){
         })
 
         $("#nav .pdf").on("click", function(){
-            sendData({command : "pdf"});
+            sendData("pdf", false);
         })
 
-        $(".saveDialog .button").on("click", function(){
+        $(".saveDialog .button a").on("click", function(){
             let name = $(".saveDialog .name input").val().trim();
             if(name.trim() == ""){
                 $(".saveDialog .message").html("File name can not be empty!");

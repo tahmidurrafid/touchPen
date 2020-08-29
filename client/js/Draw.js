@@ -84,7 +84,7 @@ let Draw = function(canvas, ctx){
     }
 
     this.performAction = function(action){
-        if(server){
+        if(this.server){
             sendData(action);
         }
         if(action.type == "insert"){
@@ -97,7 +97,6 @@ let Draw = function(canvas, ctx){
             }
         }else if(action.type == "replace"){
             beginTransacion();
-            console.log(JSON.parse(JSON.stringify(action)));
             for(let i = 0; i < action.datas.length; i++){
                 let index = action.datas[i].index;
                 this.datas.path[index] =  action.datas[i].path;
@@ -118,7 +117,6 @@ let Draw = function(canvas, ctx){
     }
 
     this.reverseAction = function(action){
-        console.log(action)
         let ret = {type : "", datas : []};
         if(action.type == "insert"){
             ret.type = "splice";
@@ -129,7 +127,6 @@ let Draw = function(canvas, ctx){
             ret.type = "insert";
             for(let i = action.datas.length-1; i >= 0; i--){
                 let index = action.datas[i];
-                console.log(index , this.datas.path[index])
                 ret.datas.push({index : index, path : JSON.parse(JSON.stringify( this.datas.path[index] ))});
             }
         }else if(action.type == "replace"){
@@ -162,7 +159,7 @@ let Draw = function(canvas, ctx){
     }
 
     this.splicePath = function(i){
-        draw.datas.path.splice(i, 1);
+        this.datas.path.splice(i, 1);
         beginTransacion();
         runDDL(queries.deletePath(i+1));
         runDDL(queries.shiftPath(i+1, 1));    

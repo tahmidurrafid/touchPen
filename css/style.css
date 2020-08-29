@@ -183,7 +183,7 @@ body{
     min-width: 100px;
 }
 
-.settings.popup .option .item .ip{
+.settings.popup .option .item .address{
     font-size: 13px;
     background-color: #000;
     font-weight: 600;
